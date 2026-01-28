@@ -2,189 +2,92 @@ import React from 'react';
 import {
   View,
   Text,
-  StyleSheet,
-  SafeAreaView,
   StatusBar,
+  StyleSheet,
   TouchableOpacity,
-  TextInput,
   Image,
+  Linking,
   ScrollView,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { useNavigation } from '@react-navigation/native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-const Doctor = () => {
-  const navigation = useNavigation();
+const videos = [
+  { id: '9NxeZfHdeFg' },
+  { id: 'NnJ50lr1eWE' },
+  { id: 'mN-_4ZsF9po' },
+];
+
+const Doctors = () => {
+  const openYoutube = (videoId) => {
+    const url = `https://youtu.be/${videoId}`;
+    Linking.openURL(url);
+  };
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
-      <ScrollView showsVerticalScrollIndicator={false}>
 
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Icon name="arrow-left" size={26} color="#000" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Find a doctor</Text>
-          <View style={{ width: 26 }} /> 
-        </View>
+      <ScrollView contentContainerStyle={{ padding: 16 }}>
+        <Text style={styles.headerTitle}>Explore More</Text>
 
-        {/* Search Bar */}
-        <View style={styles.searchContainer}>
-          <Icon name="magnify" size={22} color="#999" />
-          <TextInput
-            placeholder="Search  by name or specialty"
-            placeholderTextColor="#999"
-            style={styles.searchInput}
-          />
-        </View>
+        {videos.map((item, index) => (
+          <View key={item.id}>
+            <TouchableOpacity
+              style={styles.videoContainer}
+              onPress={() => openYoutube(item.id)}
+            >
+              {/* Thumbnail */}
+              <Image
+                source={{ uri: `https://img.youtube.com/vi/${item.id}/0.jpg` }}
+                style={styles.thumbnail}
+              />
 
-        {/* Buttons */}
-        <View style={styles.buttonRow}>
-          <TouchableOpacity style={styles.deptButton}>
-            <Text style={styles.deptButtonText}>Department</Text>
-          </TouchableOpacity>
+              {/* Center YouTube Icon */}
+              <Image
+                source={require('../assets/youtube.png')}
+                style={styles.playIcon}
+              />
+            </TouchableOpacity>
 
-          <TouchableOpacity style={styles.liveButton}>
-            <Text style={styles.liveButtonText}>Live Consultation</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Doctor List */}
-        <View style={styles.doctorList}>
-
-          <View style={styles.doctorRow}>
-            <View>
-              <Text style={styles.availability}>Available today</Text>
-              <Text style={styles.doctorName}>Dr. Amelia Chen</Text>
-              <Text style={styles.specialty}>Cardiology</Text>
-            </View>
-            <Image
-              source={require('../assets/Images/Doctor.png')}
-              style={styles.doctorImage}
-            />
+            {index < videos.length - 1 && <View style={styles.separator} />}
           </View>
-
-          <View style={styles.doctorRow}>
-            <View>
-              <Text style={styles.availability}>Available tomorrow</Text>
-              <Text style={styles.doctorName}>Dr. Ethan Ramirez</Text>
-              <Text style={styles.specialty}>Dermatology</Text>
-            </View>
-            <Image
-              source={require('../assets/Images/Doctormen.png')}
-              style={styles.doctorImage}
-            />
-          </View>
-
-          <View style={styles.doctorRow}>
-            <View>
-              <Text style={styles.availability}>Available next week</Text>
-              <Text style={styles.doctorName}>Dr. Sophia Patel</Text>
-              <Text style={styles.specialty}>Neurology</Text>
-            </View>
-            <Image
-              source={require('../assets/Images/Doctor.png')}
-              style={styles.doctorImage}
-            />
-          </View>
-
-        </View>
-
+        ))}
       </ScrollView>
     </SafeAreaView>
   );
 };
 
-export default Doctor;
+export default Doctors;
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
-    paddingHorizontal: 16,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: 30,
   },
   headerTitle: {
+    textAlign: 'center',
     fontSize: 18,
     fontWeight: '600',
+    marginBottom: 20,
     color: '#000',
   },
-  searchContainer: {
-    flexDirection: 'row',
+  videoContainer: {
+    justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f5f7fa',
+  },
+  thumbnail: {
+    width: '100%',
+    height: 200,
     borderRadius: 10,
-    marginTop: 20,
-    paddingHorizontal: 10,
-    height: 45,
   },
-  searchInput: {
-    flex: 1,
-    marginLeft: 8,
-    color: '#000',
+  playIcon: {
+    position: 'absolute',
+    width: 60,
+    height: 60,
   },
-  buttonRow: {
-    flexDirection: 'row',
-    marginTop: 20,
-  },
-  deptButton: {
-    backgroundColor: '#ff5500',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    marginRight: 10,
-  },
-  liveButton: {
-    backgroundColor: '#ff5500',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-  },
-  deptButtonText: {
-    color: '#fff',
-    fontWeight: '600',
-  },
-  liveButtonText: {
-    color: '#fff',
-    fontWeight: '600',
-  },
-  doctorList: {
-    marginTop: 25,
-  },
-  doctorRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    elevation: 2,
-    padding: 15,
-    marginBottom: 15,
-    alignItems: 'center',
-  },
-  availability: {
-    color: '#888',
-    fontSize: 13,
-  },
-  doctorName: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#000',
-    marginTop: 3,
-  },
-  specialty: {
-    fontSize: 14,
-    color: '#777',
-  },
-  doctorImage: {
-    width: 70,
-    height: 70,
-    borderRadius: 12,
+  separator: {
+    height: 1,
+    backgroundColor: '#ccc',
+    marginVertical: 20,
   },
 });

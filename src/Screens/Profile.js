@@ -1,67 +1,147 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
-  SafeAreaView,
   StyleSheet,
   Image,
   TouchableOpacity,
   StatusBar,
   ScrollView,
-  ActivityIndicator
+  ActivityIndicator,
+  Platform,
+  PermissionsAndroid,
+  Alert,Linking
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
 
 const Profile = () => {
   const fileName = user?.profile_picture?.split('/').pop();
 
   const navigation = useNavigation();
+  const [localImage, setLocalImage] = useState(null);
 
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  console.log(user)
+  console.log(user);
 
   // 👉 Fetch User Profile
   const fetchProfile = async () => {
     try {
-      const token = await AsyncStorage.getItem("access_token");
-      console.log( "token",token)
+      const token = await AsyncStorage.getItem('access_token');
+      console.log('token', token);
 
       const res = await axios.get(
-        "https://argosmob.uk/bhardwaj-hospital/public/api/profile/get",
+        'https://argosmob.uk/bhardwaj-hospital/public/api/profile/get',
         {
-          headers: { Authorization: `Bearer ${token}` }
-        }
+          headers: { Authorization: `Bearer ${token}` },
+        },
       );
-      console.log("res",res)
+      console.log('res', res.data?.user);
 
       setUser(res.data?.user);
-      
     } catch (error) {
-      console.log(" Profile API Error:", error.response?.data || error);
+      console.log(' Profile API Error:', error.response?.data || error);
     } finally {
       setLoading(false);
     }
   };
 
+  useFocusEffect(
+    useCallback(() => {
+      fetchProfile();
+    }, []),
+  );
+
+  const uploadProfileImage = async image => {
+    try {
+      const token = await AsyncStorage.getItem('access_token');
+
+      const formData = new FormData();
+      formData.append('profile_image', {
+        uri: image.uri,
+        type: image.type || 'image/jpeg',
+        name: image.fileName || 'profile.jpg',
+      });
+
+      const res = await axios.post(
+        'https://argosmob.uk/bhardwaj-hospital/public/api/profile/update-profile-image',
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data',
+          },
+        },
+      );
+
+      console.log('✅ Image upload success:', res.data);
+      Alert.alert('Success', 'Profile image updated successfully');
+
+      // refresh profile after upload
+      await fetchProfile();
+      setLocalImage(null);
+    } catch (error) {
+      console.log('❌ Upload error:', error.response?.data || error.message);
+    }
+  };
+
+  const openGallery = async () => {
+    try {
+      const res = await launchImageLibrary({
+        mediaType: 'photo',
+        selectionLimit: 1,
+        quality: 0.3,
+      });
+
+      if (res.didCancel) return;
+
+      if (res.errorCode) {
+        console.log('Gallery error:', res.errorMessage);
+        return;
+      }
+
+      if (res.assets?.length > 0) {
+        const image = res.assets[0];
+
+        // show image instantly
+        setLocalImage(image);
+
+        // upload image
+        uploadProfileImage(image);
+      }
+    } catch (error) {
+      console.log('Gallery exception:', error);
+    }
+  };
+
   useEffect(() => {
-    fetchProfile();
+    if (Platform.OS === 'android' && Platform.Version >= 33) {
+      PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES,
+      );
+    }
   }, []);
 
   // 👉 Logout Function
   const handleLogout = async () => {
-    await AsyncStorage.removeItem("access_token");
-    navigation.replace("Login");
+    await AsyncStorage.removeItem('access_token');
+    navigation.replace('Login');
   };
-  console.log(`https://argosmob.uk/bhardwaj-hospital/storage/app/public/${user?.profile_picture}`)
+  console.log(
+    `https://argosmob.uk/bhardwaj-hospital/storage/app/public/${user?.profile_picture}`,
+  );
 
   // 👉 Show Loader While Fetching Data
   if (loading) {
     return (
-      <SafeAreaView style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+      <SafeAreaView
+        style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}
+      >
         <ActivityIndicator size="large" color="#FF3D00" />
         <Text style={{ marginTop: 10, fontSize: 16 }}>Loading...</Text>
       </SafeAreaView>
@@ -71,28 +151,46 @@ const Profile = () => {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
-      
-      <ScrollView showsVerticalScrollIndicator={false}>
 
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Icon name="arrow-left" size={26} color="#000" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Patient Profile</Text>
-          <View style={{ width: 26 }} />
-        </View>
-
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <Icon name="arrow-left" size={26} color="#000" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Profile</Text>
+        <View style={{ width: 26 }} />
+      </View>
+      <ScrollView
+        style={{ paddingHorizontal: 16 }}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Profile Image + Name */}
         <View style={styles.profileSection}>
+          <TouchableOpacity onPress={openGallery} activeOpacity={0.8}>
+            <View style={{ position: 'relative' }}>
+              <Image
+                source={
+                  localImage
+                    ? { uri: localImage.uri }
+                    : user?.profile_picture
+                    ? {
+                        uri: `https://argosmob.uk/bhardwaj-hospital/storage/app/public/profiles/${user.profile_picture}`,
+                      }
+                    : require('../assets/Images/Splash.png')
+                }
+                style={styles.profileImage}
+              />
 
-          <Image
-            source={{uri:`https://argosmob.uk/bhardwaj-hospital/storage/app/public/profiles/${user?.profile_picture}`}}
-            style={styles.profileImage}
-          />
-          <Text style={styles.profileName}>
-            {user?.name || "Unknown"}
-          </Text>
+              {/* Camera icon overlay */}
+              <View style={styles.cameraIcon}>
+                <Image
+                  source={require('../assets/camera.png')}
+                  style={{ width: 22, height: 22 }}
+                />
+              </View>
+            </View>
+          </TouchableOpacity>
+
+          <Text style={styles.profileName}>{user?.name || 'Unknown'}</Text>
           <Text style={styles.profileRole}>Patient</Text>
         </View>
 
@@ -104,45 +202,43 @@ const Profile = () => {
           <Text style={styles.info}>{user?.email}</Text>
 
           <Text style={styles.label}>Phone</Text>
-          <Text style={styles.info}>{user?.phone || "Not Provided"}</Text>
+          <Text style={styles.info}>{user?.phone || 'Not Provided'}</Text>
 
           <Text style={styles.label}>Address</Text>
-          <Text style={styles.info}>{user?.address || "No Address Added"}</Text>
+          <Text style={styles.info}>{user?.address || 'No Address Added'}</Text>
 
-          <TouchableOpacity style={styles.chatButton}>
-            <Text style={styles.chatText}>Chat For More Details</Text>
-            <Icon name="message-text-outline" size={22} color="#ff5500" />
-          </TouchableOpacity>
         </View>
 
         {/* Account Settings */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Account Settings</Text>
 
-          <TouchableOpacity  
+          <TouchableOpacity
             onPress={() => navigation.navigate('UpdateProfile', { user })}
             style={styles.settingRow}
           >
             <Text style={styles.settingText}>Edit Profile</Text>
-            <Icon name="pencil-outline" size={22} color="#ff5500" />
+            <Icon name="pencil-outline" size={22} color="#E66A2C" />
           </TouchableOpacity>
 
           <TouchableOpacity onPress={handleLogout} style={styles.settingRow}>
             <Text style={styles.settingText}>Logout</Text>
-            <Icon name="arrow-right" size={22} color="#ff5500" />
+            <Icon name="arrow-right" size={22} color="#E66A2C" />
           </TouchableOpacity>
-        </View>
+<TouchableOpacity
+  onPress={() =>
+    Linking.openURL('https://prac.to/IPRCTO/7JZjUBNu').catch((err) =>
+      console.error('Failed to open URL:', err),
+    )
+  }
+  style={styles.settingRow}
+>
+  <Text style={styles.settingText}>Treatment Experience Review</Text>
+  <Icon name="arrow-right" size={22} color="#E66A2C" />
+</TouchableOpacity>
 
-        {/* Social Icons */}
-        <View style={styles.socialRow}>
-          <TouchableOpacity>
-            <Icon name="instagram" size={28} color="#d62976" />
-          </TouchableOpacity>
-          <TouchableOpacity>
-            <Icon name="facebook" size={28} color="#1877f2" />
-          </TouchableOpacity>
-        </View>
 
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -153,19 +249,23 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
-    paddingHorizontal: 16,
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 30,
-    // padding:15,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+    backgroundColor: '#fff',
   },
   headerTitle: {
+    flex: 1,
+    textAlign: 'center',
     fontSize: 18,
     fontWeight: '600',
     color: '#000',
+    fontFamily: 'Poppins-SemiBold',
   },
   profileSection: {
     alignItems: 'center',
@@ -178,31 +278,38 @@ const styles = StyleSheet.create({
   },
   profileName: {
     fontSize: 20,
-    fontWeight: '700',
     marginTop: 10,
     color: '#000',
+    fontFamily: 'Poppins-SemiBold',
   },
   profileRole: {
     color: '#888',
     fontSize: 14,
+        fontFamily: 'Poppins-Medium',
+
   },
   section: {
     marginTop: 30,
   },
   sectionTitle: {
     fontSize: 16,
-    fontWeight: '700',
+    // fontWeight: '700',
     color: '#000',
     marginBottom: 10,
+        fontFamily: 'Poppins-SemiBold',
+
   },
   label: {
     color: '#777',
     fontSize: 14,
+            fontFamily: 'Poppins-Medium',
+
   },
   info: {
     fontSize: 15,
     color: '#000',
     marginBottom: 10,
+    fontFamily: 'Poppins-Regular',
   },
   chatButton: {
     flexDirection: 'row',
@@ -212,8 +319,7 @@ const styles = StyleSheet.create({
   chatText: {
     fontSize: 15,
     color: '#000',
-    marginRight:205,
-    // justifyContent:'space-between'
+    marginRight: 205,
   },
   settingRow: {
     flexDirection: 'row',
@@ -226,12 +332,16 @@ const styles = StyleSheet.create({
   settingText: {
     fontSize: 15,
     color: '#000',
+    fontFamily: 'Poppins-Medium',
   },
-  socialRow: {
-    flexDirection: 'row',
-    // justifyContent: 'center',
-    marginTop: 100,
-    marginBottom: 40,
-    left:320,
+
+  cameraIcon: {
+    position: 'absolute',
+    bottom: 2,
+    right: 2,
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    padding: 6,
+    elevation: 4,
   },
 });

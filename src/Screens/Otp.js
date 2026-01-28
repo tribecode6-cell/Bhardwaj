@@ -97,6 +97,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
     marginBottom: 10,
+        fontFamily: 'Poppins-Regular',
+
   },
   input: {
     borderWidth: 1,
@@ -108,11 +110,15 @@ const styles = StyleSheet.create({
     height: 50,
     fontSize: 16,
     color: '#000',
+        fontFamily: 'Poppins-Regular',
+
   },
   errorText: {
     color: 'red',
     fontSize: 14,
     marginBottom: 10,
+            fontFamily: 'Poppins-Regular',
+
   },
   butview: {
     height: 60,
@@ -129,5 +135,7 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: '600',
     fontSize: 18,
+        fontFamily: 'Poppins-SemiBold',
+
   },
 });

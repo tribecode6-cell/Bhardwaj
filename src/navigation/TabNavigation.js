@@ -1,84 +1,83 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { useRoute } from '@react-navigation/native';
+import { Image } from 'react-native';
 
-// Screens
 import Home from '../Screens/Home';
 import Doctor from '../Screens/Doctor';
 import Appointment from '../Screens/Appointment';
 import Profile from '../Screens/Profile';
 
-const BottomTab = createBottomTabNavigator();
+const Tab = createBottomTabNavigator();
 
 const TabNavigation = () => {
-  const route = useRoute();
-
   return (
-    <BottomTab.Navigator
+    <Tab.Navigator
       screenOptions={{
         headerShown: false,
+        tabBarShowLabel: true,
         tabBarStyle: {
-          backgroundColor: '#FF3D00',
-          height: 75,
-          paddingBottom: 10,
-          paddingTop: 5,
+          height: 80,
         },
-        tabBarActiveTintColor: '#fff',
-        tabBarInactiveTintColor: '#555',
-        tabBarLabelStyle: {
-          fontSize: 12,
-          marginBottom: 5,
+        tabBarActiveTintColor: '#007BFF', 
+        tabBarInactiveTintColor: '#999',   
+            tabBarLabelStyle: {
+          fontFamily: 'Poppins-Medium', 
+          fontSize: 10,                 
         },
       }}
     >
-      
-      <BottomTab.Screen
+      <Tab.Screen
         name="Home"
         component={Home}
         options={{
-          tabBarIcon: ({ color, size }) => (
-            <Icon name="home" color={color} size={size} />
+          tabBarIcon: ({ color }) => (
+            <Image
+              source={require('../assets/icons/home.png')}
+              style={{ width: 22, height: 22, tintColor: color }}
+            />
           ),
         }}
       />
 
-      <BottomTab.Screen
+      <Tab.Screen
         name="Doctor"
         component={Doctor}
         options={{
-          tabBarIcon: ({ color, size }) => (
-            <Icon name="stethoscope" color={color} size={size} />
+          tabBarIcon: ({ color }) => (
+            <Image
+              source={require('../assets/icons/doctor.png')}
+              style={{ width: 22, height: 22, tintColor: color }}
+            />
           ),
         }}
       />
 
-      <BottomTab.Screen
-        name="Appointment"
+      <Tab.Screen
+        name="Appointments"
         component={Appointment}
         options={{
-          tabBarIcon: ({ color, size }) => (
-            <Icon name="calendar-check" color={color} size={size} />
+          tabBarIcon: ({ color }) => (
+            <Image
+              source={require('../assets/icons/calendar.png')}
+              style={{ width: 22, height: 22, tintColor: color }}
+            />
           ),
         }}
       />
 
-      {/* Profile Tab With Passed Data */}
-      <BottomTab.Screen
+      <Tab.Screen
         name="Profile"
         component={Profile}
-        initialParams={{
-          userData: route.params?.userData,   // form ka data
-          photo: route.params?.photo,         // profile image
-        }}
         options={{
-          tabBarIcon: ({ color, size }) => (
-            <Icon name="account" color={color} size={size} />
+          tabBarIcon: ({ color }) => (
+            <Image
+              source={require('../assets/icons/users.png')}
+              style={{ width: 22, height: 22, tintColor: color }}
+            />
           ),
         }}
       />
-
-    </BottomTab.Navigator>
+    </Tab.Navigator>
   );
 };
 

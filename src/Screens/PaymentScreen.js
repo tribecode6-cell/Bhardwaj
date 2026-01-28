@@ -58,7 +58,7 @@ const PaymentScreen = () => {
         <Icon
           name={selectedMethod === 'card' ? 'radiobox-marked' : 'radiobox-blank'}
           size={22}
-          color="#ff5500"
+          color="#E66A2C"
         />
       </TouchableOpacity>
 
@@ -73,7 +73,7 @@ const PaymentScreen = () => {
               : 'radiobox-blank'
           }
           size={22}
-          color="#ff5500"
+          color="#E66A2C"
         />
       </TouchableOpacity>
 
@@ -135,7 +135,7 @@ const styles = StyleSheet.create({
   },
   option: {
     borderWidth: 1,
-    borderColor: '#ff5500',
+    borderColor: '#E66A2C',
     borderRadius: 10,
     paddingVertical: 15,
     paddingHorizontal: 12,
@@ -170,7 +170,7 @@ const styles = StyleSheet.create({
     marginVertical: 10,
   },
   payBtn: {
-    backgroundColor: '#ff5500',
+    backgroundColor: '#E66A2C',
     paddingVertical: 16,
     borderRadius: 10,
     alignItems: 'center',

@@ -90,7 +90,7 @@ const BookBed = () => {
             style={styles.datePickerButton}
             onPress={() => setOpen(true)}>
             <Text style={styles.dateText}>Select Dates</Text>
-            <Icon name="calendar" size={22} color="#ff5500" />
+            <Icon name="calendar" size={22} color="#E66A2C" />
           </TouchableOpacity>
 
           <DatePicker
@@ -215,7 +215,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   roomSelected: {
-    backgroundColor: '#ff5500',
+    backgroundColor: '#E66A2C',
   },
   roomText: {
     color: '#000',
@@ -251,7 +251,7 @@ const styles = StyleSheet.create({
     color: '#000',
   },
   submitButton: {
-    backgroundColor: '#ff5500',
+    backgroundColor: '#E66A2C',
     borderRadius: 10,
     paddingVertical: 14,
     alignItems: 'center',

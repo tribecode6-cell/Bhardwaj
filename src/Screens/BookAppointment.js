@@ -1,66 +1,113 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   TouchableOpacity,
   TextInput,
   StatusBar,
   ActivityIndicator,
-} from "react-native";
+  Alert,
+  KeyboardAvoidingView,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { Calendar } from "react-native-calendars";
-import Icon from "react-native-vector-icons/MaterialCommunityIcons";
-import { useNavigation, useRoute } from "@react-navigation/native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import axios from "axios";
+import { Calendar } from 'react-native-calendars';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
+import RazorpayCheckout from 'react-native-razorpay';
 
 const BookAppointment = () => {
   const navigation = useNavigation();
   const route = useRoute();
-  const { doctorId } = route.params;
+  const { doctorId, consultationFee } = route.params;
+  console.log('asljsafadjl', doctorId);
 
-  const [selectedDate, setSelectedDate] = useState("");
-  const [appointmentType, setAppointmentType] = useState("in-person");
-  const [symptoms, setSymptoms] = useState("");
+  const [selectedDate, setSelectedDate] = useState('');
+  const [appointmentType, setAppointmentType] = useState('person');
+  const [symptoms, setSymptoms] = useState('');
   const [loading, setLoading] = useState(false);
 
   // Time slot states
   const [selectedSlot, setSelectedSlot] = useState(null);
-  const [startTime, setStartTime] = useState("");
-  const [endTime, setEndTime] = useState("");
+  const [startTime, setStartTime] = useState('');
+  const [endTime, setEndTime] = useState('');
+
+  const [slots, setSlots] = useState([]);
 
   // Backend booked slots
   const [bookedSlots, setBookedSlots] = useState([]);
 
   // Time slot list
-  const slots = [
-    "9:00 AM", "9:30 AM", "10:00 AM", "10:30 AM",
-    "11:00 AM", "11:30 AM",
-  ];
+
+  //   const slots = [
+  //   "9:00 AM", "9:30 AM",
+  //   "10:00 AM", "10:30 AM",
+  //   "11:00 AM", "11:30 AM",
+  //   "12:00 PM", "12:30 PM",
+  //   "1:00 PM", "1:30 PM",
+  //   "2:00 PM", "2:30 PM",
+  //   "3:00 PM", "3:30 PM",
+  //   "4:00 PM", "4:30 PM",
+  //   "5:00 PM", "5:30 PM",
+  // ];
 
   // Fetch Booked Slots from API
-  const fetchBookedSlots = async (date) => {
+  const fetchDoctorSlots = async date => {
+    if (!doctorId || !date) return;
+
     try {
+      const token = await AsyncStorage.getItem('access_token');
+
       const response = await axios.get(
-        "https://argosmob.uk/bhardwaj-hospital/public/api/booked-slots",
-        { params: { doctor_id: doctorId, date: selectedDate } }
+        'https://argosmob.uk/bhardwaj-hospital/public/api/appointments/doctor-slots',
+        {
+          params: {
+            doctor_id: doctorId,
+            date: date,
+          },
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: 'application/json',
+          },
+        },
       );
 
-      setBookedSlots(response.data?.slots || []);
-    } catch (err) {
-      console.log("❌ Slot Fetch Error:", err);
+      console.log('✅ Slots API:', response.data);
+      setSlots(response.data?.slots || []);
+    } catch (error) {
+      console.log('❌ Slot API Error:', error.response?.data || error.message);
     }
   };
 
   useEffect(() => {
-    if (selectedDate) fetchBookedSlots();
+    if (selectedDate) {
+      fetchDoctorSlots(selectedDate);
+    }
   }, [selectedDate]);
 
-  // When user selects slot → auto-set start/end time
-  const handleSlotSelect = (slot) => {
+  const convertTo24Hour = time12h => {
+    const [time, modifier] = time12h.split(' ');
+    let [hours, minutes] = time.split(':');
+
+    if (hours === '12') {
+      hours = '00';
+    }
+
+    if (modifier === 'PM') {
+      hours = parseInt(hours, 10) + 12;
+    }
+
+    // Convert hours back to string before using padStart
+    return `${String(hours).padStart(2, '0')}:${minutes}`;
+  };
+
+  const handleSlotSelect = slot => {
+    console.log('🟢 SLOT CLICKED:', slot);
+
     setSelectedSlot(slot);
     setStartTime(slot);
 
@@ -71,17 +118,19 @@ const BookAppointment = () => {
 
   // ---------- RESOURCES ----------
   const [resources, setResources] = useState([]);
-  const [selectedResource, setSelectedResource] = useState("");
+  const [selectedResource, setSelectedResource] = useState('');
   const [showResourceDropdown, setShowResourceDropdown] = useState(false);
 
   const getResources = async () => {
     try {
       const response = await axios.get(
-        "https://argosmob.uk/bhardwaj-hospital/public/api/get-resources"
+        'https://argosmob.uk/bhardwaj-hospital/public/api/get-resources',
       );
+      console.log('resources', response.data?.data);
+
       setResources(response.data?.data || []);
     } catch (err) {
-      console.log("❌ Resource API Error:", err);
+      console.log('❌ Resource API Error:', err);
     }
   };
 
@@ -89,55 +138,200 @@ const BookAppointment = () => {
     getResources();
   }, []);
 
+  // Add this function to handle Razorpay payment
+  // const handlePayment = async () => {
+  //   // Validation BEFORE opening Razorpay
+  //   if (!selectedDate || !startTime || !endTime || !selectedResource) {
+  //     // Use setTimeout to ensure Alert is shown after current cycle
+  //      alert('Please fill all required fields.');
+  //     return;
+  //   }
+
+  //   const options = {
+  //     description: 'Appointment Booking',
+  //     currency: 'INR',
+  //     key: 'rzp_test_oZWpPCp1BkgtEg', // Replace with your actual key
+  //     amount: consultationFee * 100, // Amount in paise
+  //     name: 'Bhardwaj Hospital',
+  //     prefill: {
+  //       email: 'patient@example.com',
+  //       contact: '9999999999',
+  //       name: 'Patient Name'
+  //     },
+  //     theme: { color: '#E66A2C' }
+  //   };
+  // console.log("detailskdjaskdaksdkasdhjk",options);
+  //   RazorpayCheckout.open(options)
+  //     .then((data) => {
+  //       // Payment Success
+  //       console.log('✅ Payment Success:', data);
+  //       // bookAppointmentAPI(data.razorpay_payment_id);
+
+  //       const payload ={
+  //         {
+  //     "payment_id": "pay_XXXXXXXXXXXXXX",
+  //     "razorpay_order_id": "order_XXXXXXXXXXXXXX",
+  //     "appointment_id": 123
+  // }
+  //       }
+  //        const response = await axios.post(
+  //         'https://argosmob.uk/bhardwaj-hospital/public/api/payments/verify',
+  //         payload,
+  //         {
+  //           headers: {
+  //             Authorization: `Bearer ${token}`,
+  //             'Content-Type': 'application/json',
+  //           },
+  //         },
+  //       );
+
+  //     })
+  //     .catch((error) => {
+  //       // Payment Failed or Cancelled
+  //       console.log('❌ Payment Error:', error);
+  //       setTimeout(() => {
+  //         Alert.alert(
+  //           'Payment Failed',
+  //           error.description || 'Payment was cancelled or failed'
+  //         );
+  //       }, 100);
+  //     });
+  // };
+
+  const handlePayment = async () => {
+    try {
+      // 1️⃣ Validation
+      if (!selectedDate || !startTime || !endTime || !selectedResource) {
+        Alert.alert('Error', 'Please fill all required fields.');
+        return;
+      }
+
+      const token = await AsyncStorage.getItem('access_token');
+      if (!token) {
+        alert('Token not found');
+      }
+
+      const orderRes = await axios.get(
+        'https://argosmob.uk/bhardwaj-hospital/public/api/profile/get',
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+      // console.log('User', orderRes?.data?.user);
+      const UserEmail = orderRes?.data?.email;
+      const UserName = orderRes?.data?.name;
+      const UserNumber = orderRes?.data?.phone;
+
+      // 3️⃣ Razorpay options
+      const options = {
+        description: 'Appointment Booking',
+        currency: 'INR',
+        key: 'rzp_test_oZWpPCp1BkgtEg',
+        amount: consultationFee,
+        order_id: '',
+        name: 'Bhardwaj Hospital',
+        prefill: {
+          email: UserEmail || 'patient@example.com',
+          contact: UserNumber || '9999999999',
+          name: UserName || 'Patient',
+        },
+        theme: { color: '#E66A2C' },
+      };
+      console.log('utdktrjsjdfsjfsjgsjgsjdjdixdtdxtxtxctxitxditrdxi', options);
+      // 4️⃣ Open Razorpay
+      const data = await RazorpayCheckout.open(options);
+      console.log('✅ Payment Success id:', data?.razorpay_payment_id);
+   
+      // 5️⃣ Verify payment
+      const payload = {
+        payment_id: data?.razorpay_payment_id,
+      };
+       console.log('✅ Payment payload to Api:', payload);
+ 
+  const res =     await axios.post(
+        'https://argosmob.uk/bhardwaj-hospital/public/api/payments/verify',
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        },
+      );
+console.log("res",res);
+
+      Alert.alert('Success', 'Appointment booked successfully');
+    } catch (error) {
+      console.log('❌ Payment Error:', error);
+      Alert.alert(
+        'Payment Failed',
+        error?.description || error?.message || 'Payment cancelled',
+      );
+    }
+  };
+
   // ---------- BOOK APPOINTMENT API ----------
   const bookAppointmentAPI = async () => {
-    if (!selectedDate || !startTime || !selectedResource) {
-      alert("❗ Please fill all required fields.");
+    console.log('selected Date', selectedDate);
+    console.log('selected Time', startTime);
+    console.log('selected Resouces', selectedResource);
+
+    if (!selectedDate || !startTime || !endTime || !selectedResource) {
+      alert('❗ Please fill all required fields.');
       return;
     }
 
     try {
       setLoading(true);
-      const token = await AsyncStorage.getItem("token");
+      const token = await AsyncStorage.getItem('access_token');
+      console.log('asdds', token);
 
       const payload = {
-        doctor_name: doctorId,
+        doctor_id: doctorId, // ✅ FIXED: Changed from doctor_name to doctor_id
         appointment_date: selectedDate,
-        start_time: startTime,
-        end_time: endTime,
-        patient_name: "",
+        start_time: convertTo24Hour(startTime), // ✅ FIXED: Convert to 24-hour format
+        end_time: convertTo24Hour(endTime),
+        patient_name: '',
         notes: symptoms,
         resource_name: selectedResource,
-        appointment_type: appointmentType,
+        type: appointmentType,
       };
-
+      console.log('📤 Payload being sent:', payload); // ✅ ADDED: Debug log
+      return;
       const response = await axios.post(
-        "https://argosmob.uk/bhardwaj-hospital/public/api/appointments/save",
+        'https://argosmob.uk/bhardwaj-hospital/public/api/appointments/save',
         payload,
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
+            'Content-Type': 'application/json',
           },
-        }
+        },
       );
 
-      alert("🎉 Appointment booked successfully!");
-      navigation.navigate("Appointment");
+      alert('🎉 Appointment booked successfully!');
+      navigation.navigate('Appointment');
     } catch (error) {
-      console.log("❌ Booking API ERROR:", error.response?.data || error.message);
-      alert("Booking failed");
+      console.log(
+        '❌ Booking API ERROR:',
+        error.response?.data || error.message,
+      );
+      // alert();
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
-      <ScrollView>
-
-        {/* Header */}
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 40 : 0}
+      >
+        <StatusBar barStyle="dark-content" backgroundColor="#fff" />
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
             <Icon name="arrow-left" size={26} color="#000" />
@@ -145,137 +339,220 @@ const BookAppointment = () => {
           <Text style={styles.headerTitle}>Book Appointment</Text>
           <View style={{ width: 26 }} />
         </View>
-
-        {/* Calendar */}
-        <Calendar
+        <ScrollView style={{ paddingHorizontal: 16 }}>
+          {/* Header */}
+          {/* Calendar */}
+          {/* <Calendar
           minDate={new Date()}
-          onDayPress={(day) => setSelectedDate(day.dateString)}
+          // onDayPress={(day) => setSelectedDate(day.dateString)}
+           onDayPress={(day) => {
+    setSelectedDate(day.dateString);
+    Alert.alert('Selected Date', day.dateString);
+  }}
           markedDates={{
-            [selectedDate]: { selected: true, selectedColor: "#ff5500" },
+            [selectedDate]: { selected: true, selectedColor: "#E66A2C" },
           }}
-          theme={{ arrowColor: "#ff5500", todayTextColor: "#ff5500" }}
+          theme={{ arrowColor: "#E66A2C", todayTextColor: "#E66A2C" }}
           style={styles.calendar}
-        />
+        /> */}
+          {/* <Calendar
+  minDate={new Date()}
+  onDayPress={(day) => {
+    setSelectedDate(day.dateString);
+    fetchDoctorSlots(day.dateString);
+  }}
+  markedDates={{
+    [selectedDate]: { selected: true, selectedColor: "#E66A2C" },
+  }}
+/> */}
+          <Calendar
+            minDate={new Date()}
+            onDayPress={day => {
+              setSelectedDate(day.dateString);
+              fetchDoctorSlots(day.dateString);
+            }}
+            markedDates={{
+              [selectedDate]: { selected: true, selectedColor: '#E66A2C' },
+            }}
+            theme={{
+              arrowColor: '#E66A2C',
+              todayTextColor: '#E66A2C',
 
-        {/* TIME SLOTS */}
-        <Text style={styles.timeTitle}>Select Time</Text>
-        <View style={styles.slotContainer}>
-          {slots.map((slot, index) => {
-            const isBooked = bookedSlots.includes(slot);
-            const isSelected = selectedSlot === slot;
-
-            return (
-              <TouchableOpacity
-                key={index}
-                disabled={isBooked}
-                onPress={() => setSelectedSlot(slot)}
-                style={[
-                  styles.slotBox,
-                  isSelected && styles.selectedSlot,   // Orange
-                  isBooked && styles.bookedSlot        // Grey
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.slotText,
-                    (isSelected || isBooked) && { color: "#fff" }
-                  ]}
-                >
-                  {slot}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-
-
-        {/* RESOURCE DROPDOWN */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Select Resource</Text>
-
-          <TouchableOpacity
-            style={styles.dropdownButton}
-            onPress={() => setShowResourceDropdown(!showResourceDropdown)}
-          >
-            <Text style={styles.dropdownText}>
-              {selectedResource || "Select resource"}
-            </Text>
-          </TouchableOpacity>
-
-          {showResourceDropdown && (
-            <View style={styles.dropdownPanel}>
-              <ScrollView style={{ maxHeight: 200 }}>
-                {resources.map((item) => (
-                  <TouchableOpacity
-                    key={item.id}
-                    style={styles.option}
-                    onPress={() => {
-                      setSelectedResource(item.name);
-                      setShowResourceDropdown(false);
-                    }}
-                  >
-                    <Text style={styles.optionText}>{item.name}</Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
-            </View>
-          )}
-        </View>
-
-        {/* Symptoms */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Describe Symptoms</Text>
-          <TextInput
-            style={styles.textArea}
-            placeholder="Type here..."
-            multiline
-            value={symptoms}
-            onChangeText={setSymptoms}
+              textDayFontFamily: 'Poppins-Regular',
+              textMonthFontFamily: 'Poppins-SemiBold',
+              textDayHeaderFontFamily: 'Poppins-Medium',
+            }}
+            style={{ borderRadius: 12 }}
+            disableAllTouchEventsForDisabledDays={true}
+            allowFontScaling={false}
+            stylesheet={{
+              calendar: {
+                dayTextAtIndex0: {
+                  fontFamily: 'Poppins-Regular',
+                },
+                dayTextAtIndex1: {
+                  fontFamily: 'Poppins-Regular',
+                },
+                dayTextAtIndex2: {
+                  fontFamily: 'Poppins-Regular',
+                },
+                dayTextAtIndex3: {
+                  fontFamily: 'Poppins-Regular',
+                },
+                dayTextAtIndex4: {
+                  fontFamily: 'Poppins-Regular',
+                },
+                dayTextAtIndex5: {
+                  fontFamily: 'Poppins-Regular',
+                },
+                dayTextAtIndex6: {
+                  fontFamily: 'Poppins-Regular',
+                },
+              },
+            }}
           />
-        </View>
-
-        {/* Appointment Type */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Appointment Type</Text>
-
-          {["in-person", "video"].map((type) => (
-            <TouchableOpacity
-              key={type}
-              style={[
-                styles.typeOption,
-                appointmentType === type && styles.typeSelected,
-              ]}
-              onPress={() => setAppointmentType(type)}
-            >
-              <Text style={styles.typeTitle}>
-                {type === "in-person" ? "In Person" : "Video Call"}
+          {/* TIME SLOTS */}
+          <Text style={styles.timeTitle}>Select Time</Text>
+          <View style={styles.slotContainer}>
+            {slots.length === 0 ? (
+              <Text
+                style={{
+                  color: '#E66A2C',
+                  marginTop: 10,
+                  fontFamily: 'Poppins-Medium',
+                }}
+              >
+                No slots available for this date
               </Text>
-              <Icon
-                name={
-                  appointmentType === type
-                    ? "radiobox-marked"
-                    : "radiobox-blank"
-                }
-                size={22}
-                color="#ff5500"
-              />
+            ) : (
+              slots.map((slot, index) => {
+                const isBooked = !slot.available;
+                const isSelected = selectedSlot?.start === slot.start;
+
+                return (
+                  <TouchableOpacity
+                    key={index}
+                    disabled={isBooked}
+                    onPress={() => {
+                      setSelectedSlot(slot);
+                      setStartTime(slot.start);
+                      setEndTime(slot.end);
+                    }}
+                    style={[
+                      styles.slotBox,
+                      isSelected && styles.selectedSlot,
+                      isBooked && styles.bookedSlot,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.slotText,
+                        (isSelected || isBooked) && { color: '#fff' },
+                      ]}
+                    >
+                      {slot.display}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })
+            )}
+          </View>
+          {/* RESOURCE DROPDOWN */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Select Resource</Text>
+
+            <TouchableOpacity
+              style={styles.dropdownButton}
+              onPress={() => setShowResourceDropdown(!showResourceDropdown)}
+            >
+              <Text style={styles.dropdownText}>
+                {selectedResource || 'Select resource'}
+              </Text>
             </TouchableOpacity>
-          ))}
-        </View>
 
-        {/* Confirm Button */}
-        <TouchableOpacity
-          style={styles.confirmButton}
-          onPress={bookAppointmentAPI}
-        >
+            {showResourceDropdown && (
+              <View style={styles.dropdownPanel}>
+                <ScrollView style={{ maxHeight: 200 }}>
+                  {resources.map(item => (
+                    <TouchableOpacity
+                      key={item.id}
+                      style={styles.option}
+                      onPress={() => {
+                        setSelectedResource(item.name);
+                        setShowResourceDropdown(false);
+                      }}
+                    >
+                      <Text style={styles.optionText}>{item.name}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+            )}
+          </View>
+          {/* Symptoms */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Describe Symptoms</Text>
+            <TextInput
+              style={styles.textArea}
+              placeholder="Type here..."
+              multiline
+              value={symptoms}
+              onChangeText={setSymptoms}
+            />
+          </View>
+          {/* Appointment Type */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Appointment Type</Text>
+
+            {['person', 'video'].map(type => (
+              <TouchableOpacity
+                key={type}
+                style={[
+                  styles.typeOption,
+                  appointmentType === type && styles.typeSelected,
+                ]}
+                onPress={() => setAppointmentType(type)}
+              >
+                <Text style={styles.typeTitle}>
+                  {type === 'person' ? 'In Person' : 'Video Call'}
+                </Text>
+                <Icon
+                  name={
+                    appointmentType === type
+                      ? 'radiobox-marked'
+                      : 'radiobox-blank'
+                  }
+                  size={22}
+                  color="#E66A2C"
+                />
+              </TouchableOpacity>
+            ))}
+          </View>
+          {/* Confirm Button */}
+          {/* <TouchableOpacity
+            style={styles.confirmButton}
+            onPress={bookAppointmentAPI}
+          >
+            {loading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.confirmText}>Confirm Appointment</Text>
+            )}
+          </TouchableOpacity> */}
           {loading ? (
-            <ActivityIndicator color="#fff" />
+            <ActivityIndicator size="large" color="#E66A2C" />
           ) : (
-            <Text style={styles.confirmText}>Confirm Appointment</Text>
+            <TouchableOpacity
+              style={styles.confirmButton}
+              onPress={handlePayment}
+            >
+              <Text style={styles.confirmText}>
+                Pay ₹{consultationFee} & Book
+              </Text>
+            </TouchableOpacity>
           )}
-        </TouchableOpacity>
-
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };
@@ -284,100 +561,134 @@ export default BookAppointment;
 
 // ---------------- STYLES -------------------
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff", paddingHorizontal: 16 },
+  container: { flex: 1, backgroundColor: '#fff' },
   header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 30,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+    backgroundColor: '#fff',
   },
-  headerTitle: { fontSize: 18, fontWeight: "600" },
+  headerTitle: {
+    flex: 1,
+    textAlign: 'center',
+    fontSize: 18,
+    fontFamily: 'Poppins-SemiBold',
+    color: '#000',
+  },
   calendar: { borderRadius: 12, elevation: 2, marginTop: 10 },
 
-  timeTitle: { fontSize: 18, fontWeight: "700", marginTop: 20 },
+  timeTitle: {
+    fontSize: 18,
+    fontWeight: '500',
+    marginTop: 20,
+    fontFamily: 'Poppins-SemiBold',
+  },
 
+  selectedSlot: { backgroundColor: '#000', fontFamily: 'Poppins-Medium' },
+  bookedSlot: { backgroundColor: '#000', borderColor: '#000' },
 
-
-  selectedSlot: { backgroundColor: "#000" },
-  bookedSlot: { backgroundColor: "#000", borderColor: "#000" },
-
-  slotText: { color: "#ff5722", fontWeight: "600" },
+  slotText: {
+    color: '#ff5722',
+    fontWeight: '500',
+    fontFamily: 'Poppins-SemiBold',
+  },
 
   section: { marginTop: 25 },
-  sectionTitle: { fontSize: 16, fontWeight: "700" },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '500',
+    marginBottom: 5,
+    fontFamily: 'Poppins-SemiBold',
+  },
 
   dropdownButton: {
     borderWidth: 1,
     borderRadius: 10,
     padding: 12,
   },
-  dropdownText: { fontSize: 15 },
+  dropdownText: { fontSize: 15, fontFamily: 'Poppins-Regular' },
   dropdownPanel: {
     borderWidth: 1,
     borderRadius: 10,
     marginTop: 8,
-    backgroundColor: "#fff",
+    backgroundColor: '#fff',
     elevation: 6,
   },
   option: { padding: 12, borderBottomWidth: 1 },
-  optionText: { fontSize: 15 },
+  optionText: { fontSize: 15, fontFamily: 'Poppins-Regular' },
 
   textArea: {
     borderWidth: 1,
     borderRadius: 10,
     padding: 10,
     minHeight: 90,
-    backgroundColor: "#f9f9f9",
+    backgroundColor: '#f9f9f9',
+    fontFamily: 'Poppins-Regular',
   },
 
   typeOption: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     borderWidth: 1,
     borderRadius: 10,
     padding: 14,
     marginBottom: 8,
   },
-  typeSelected: { backgroundColor: "#fff7f2", borderColor: "#ff5500" },
-  typeTitle: { fontSize: 15 },
+  typeSelected: { backgroundColor: '#fff7f2', borderColor: '#E66A2C' },
+  typeTitle: { fontSize: 15, fontFamily: 'Poppins-Regular' },
 
   confirmButton: {
-    backgroundColor: "#ff5500",
+    backgroundColor: '#E66A2C',
     paddingVertical: 15,
     borderRadius: 10,
     marginTop: 30,
-    alignItems: "center",
-    marginBottom: '7%'
+    alignItems: 'center',
+    marginBottom: '7%',
   },
-  confirmText: { color: "#fff", fontSize: 16, fontWeight: "700" },
+  confirmText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '500',
+    fontFamily: 'Poppins-SemiBold',
+  },
   slotContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 12,
     paddingVertical: 10,
     // marginBottom:10,
   },
 
   slotBox: {
-    width: "30%",
-    backgroundColor: "#ff5722", // SAME ORANGE UI
-    paddingVertical: 12,
+    width: '30%',
+    backgroundColor: '#ff5722', // SAME ORANGE UI
+    paddingVertical: 10,
     borderRadius: 10,
-    alignItems: "center",
+    padding: 5,
+
+    alignItems: 'center',
   },
 
   selectedSlot: {
-    backgroundColor: "#ff5722", 
-    borderColor:'#000',
-    borderWidth:2,
+    backgroundColor: '#ff5722',
+    borderColor: '#000',
+    borderWidth: 2,
+    padding: 5,
+
     // Keep selected same orange
   },
 
   bookedSlot: {
-    backgroundColor: "#bfbfbf", // Booked slot grey (different color)
+    backgroundColor: '#bfbfbf', // Booked slot grey (different color)
+    padding: 5,
   },
 
   slotText: {
-    color: "#fff",
-    fontWeight: "600",
+    color: '#fff',
+    fontWeight: '600',
+    textAlign: 'center',
   },
 });

@@ -3,81 +3,105 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   Image,
   TouchableOpacity,
   StatusBar,
-  FlatList
+  FlatList,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useNavigation } from '@react-navigation/native';
-import{useRoute} from "@react-navigation/native";
+import { useRoute } from '@react-navigation/native';
 import axios from 'axios';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const DoctorDetails = () => {
   const navigation = useNavigation();
   const route = useRoute();
-  const {doctorId} =route.params;
+  const { doctorId } = route.params;
   const [doctor, setDoctor] = useState(null);
-  const [ loading,setLoading] = useState(true);
-  const days = ["Mon", "Tue", "Wed", "Thu", "Fri"];
-const [selectedDay, setSelectedDay] = useState(null);
-
-
+  const [loading, setLoading] = useState(true);
+  const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+  const [selectedDay, setSelectedDay] = useState(null);
+const [consultationFee, setConsultationFee] = useState(null);
 
   const getDoctorById = async () => {
-    try{
+    console.log('dfnsdfnksdjfk');
+
+    try {
       const response = await axios.get(
-        `https://argosmob.uk/bhardwaj-hospital/public/api/doctors/${doctorId}`
+        `https://argosmob.uk/bhardwaj-hospital/public/api/doctors/${doctorId}`,
       );
       setDoctor(response.data?.data);
-      console.log("Doctor ID ", response.data?.data)
+      console.log('Doctor ID 123', response.data?.data);
+setConsultationFee(response.data?.data?.consultation_fee);
 
-      console.log()
-    }catch(error){
-      console.log("GET BY ID ERROR", error.response?.data|| error);
-    }finally{
+
+      console.log();
+    } catch (error) {
+      console.log('GET BY ID ERROR', error.response?.data || error);
+    } finally {
       setLoading(false);
     }
   };
 
-  useEffect(()=>{
-    if(doctorId){
-      getDoctorById ();
+  useEffect(() => {
+    if (doctorId) {
+      getDoctorById();
     }
-  },[doctorId]);
+  }, [doctorId]);
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <Icon name="arrow-left" size={26} color="#000" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>
+          {doctor ? doctor.first_name + ' ' + doctor.last_name : 'Loading'}
+        </Text>
+        <View style={{ width: 26 }} />
+      </View>
       <ScrollView showsVerticalScrollIndicator={false}>
-
         {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Icon name="arrow-left" size={26} color="#000" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>{doctor? doctor.first_name+" "+ doctor.last_name:"Loading"}</Text>
-          <View style={{ width: 26 }} />
-        </View>
 
         {/* Doctor Info */}
         <View style={styles.profileSection}>
-          <Image
+          {/* <Image
             source={  doctor?.profile_image ?{uri:doctor.profile_image}:require('../assets/Images/Doctor.png')}
             style={styles.profileImage}
+          /> */}
+          <Image
+            source={
+              doctor?.profile_image
+                ? {
+                    uri: `https://argosmob.uk/bhardwaj-hospital/storage/app/public/${doctor.profile_image}`,
+                  }
+                : require('../assets/Images/Doctor.png')
+            }
+            style={styles.profileImage}
           />
-          <Text style={styles.doctorName}>{doctor? doctor.first_name+" "+ doctor.last_name:"Loading"} </Text>
-          <Text style={styles.specialization}>{doctor?.specialty?.name || "N/A"}</Text>
-          <Text style={styles.experience}>{doctor?.experience ? `${doctor.experience} years experience` : "Experience not available"}</Text>
+
+          <Text style={styles.doctorName}>
+            {doctor ? doctor.first_name + ' ' + doctor.last_name : 'Loading'}{' '}
+          </Text>
+          <Text style={styles.specialization}>
+            {doctor?.specialty?.name || 'N/A'}
+          </Text>
+          <Text style={styles.experience}>
+            {doctor?.experience
+              ? `${doctor.experience} years experience`
+              : 'Experience not available'}
+          </Text>
         </View>
 
         {/* About */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>About</Text>
           <Text style={styles.aboutText}>
-           {doctor?.bio}
+            {doctor?.bio ||
+              'Experienced General Physician with over 10 years of clinical practice. He specializes in preventive healthcare, diagnosis, and treatment of common medical conditions, ensuring compassionate and patient-focused care.'}
           </Text>
         </View>
 
@@ -87,71 +111,39 @@ const [selectedDay, setSelectedDay] = useState(null);
           <Text style={styles.infoText}>{doctor?.specialty?.name}</Text>
         </View>
 
-       <View style={styles.section}>
-  <Text style={styles.sectionTitle}>Available Days</Text>
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Available Days</Text>
 
-  <FlatList
-    data={days}
-    horizontal
-    showsHorizontalScrollIndicator={false}
-    keyExtractor={(item) => item}
-    contentContainerStyle={{ paddingVertical: 10 }}
-    renderItem={({ item }) => (
-      <TouchableOpacity
-        style={[
-          styles.dayButton,
-          selectedDay === item && styles.dayButtonSelected
-        ]}
-        onPress={() => setSelectedDay(item)}
-      >
-        <Text
-          style={[
-            styles.dayText,
-            selectedDay === item.working_days && styles.dayTextSelected
-          ]}
-        >
-          {item}
-        </Text>
-      </TouchableOpacity>
-    )}
-  />
-</View>
+          <FlatList
+            data={days}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            keyExtractor={item => item}
+            contentContainerStyle={{ paddingVertical: 10 }}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                style={[
+                  styles.dayButton,
+                  selectedDay === item && styles.dayButtonSelected,
+                ]}
+                onPress={() => setSelectedDay(item)}
+              >
+                <Text
+                  style={[
+                    styles.dayText,
+                    selectedDay === item.working_days && styles.dayTextSelected,
+                  ]}
+                >
+                  {item}
+                </Text>
+              </TouchableOpacity>
+            )}
+          />
+        </View>
 
+   
 
-        
-        {/* <View style={styles.section}> */}
-          {/* <Text style={styles.sectionTitle}>Reviews</Text>
-          <View style={styles.ratingRow}>
-            <Text style={styles.ratingNumber}>4.8</Text>
-            <View style={styles.starRow}>
-              <Icon name="star" size={20} color="#ff5500" />
-              <Icon name="star" size={20} color="#ff5500" />
-              <Icon name="star" size={20} color="#ff5500" />
-              <Icon name="star" size={20} color="#ff5500" />
-              <Icon name="star-half-full" size={20} color="#ff5500" />
-            </View>
-          </View>
-          <Text style={styles.reviewCount}>125 reviews</Text> */}
-
-          {/* Rating Bars */}
-          {/* {[
-            { stars: 5, percent: 70 },
-            { stars: 4, percent: 20 },
-            { stars: 3, percent: 5 },
-            { stars: 2, percent: 3 },
-            { stars: 1, percent: 2 },
-          ].map((item, index) => (
-            <View key={index} style={styles.barRow}>
-              <Text style={styles.barLabel}>{item.stars}</Text>
-              <View style={styles.barContainer}>
-                <View style={[styles.barFill, { width: `${item.percent}%` }]} />
-              </View>
-              <Text style={styles.barPercent}>{item.percent}%</Text>
-            </View>
-          ))} */}
-
-        
-          {/* <View style={styles.reviewCard}>
+        {/* <View style={styles.reviewCard}>
             <Image
               source={require('../assets/Images/Doctor.png')}
               style={styles.reviewerImage}
@@ -160,7 +152,7 @@ const [selectedDay, setSelectedDay] = useState(null);
               <Text style={styles.reviewerName}>Sophia Bennett</Text>
               <View style={styles.starRow}>
                 {[...Array(5)].map((_, i) => (
-                  <Icon key={i} name="star" size={16} color="#ff5500" />
+                  <Icon key={i} name="star" size={16} color="#E66A2C" />
                 ))}
               </View>
               <Text style={styles.reviewText}>
@@ -176,7 +168,7 @@ const [selectedDay, setSelectedDay] = useState(null);
             </View>
           </View> */}
 
-          {/* <View style={styles.reviewCard}>
+        {/* <View style={styles.reviewCard}>
             <Image
               source={require('../assets/Images/Doctor.png')}
               style={styles.reviewerImage}
@@ -185,7 +177,7 @@ const [selectedDay, setSelectedDay] = useState(null);
               <Text style={styles.reviewerName}>Olivia Carter</Text>
               <View style={styles.starRow}>
                 {[...Array(4)].map((_, i) => (
-                  <Icon key={i} name="star" size={16} color="#ff5500" />
+                  <Icon key={i} name="star" size={16} color="#E66A2C" />
                 ))}
               </View>
               <Text style={styles.reviewText}>
@@ -202,14 +194,18 @@ const [selectedDay, setSelectedDay] = useState(null);
         {/* </View> */}
 
         {/* Book Button */}
-      <View style={{marginTop:60,}}>
-          <TouchableOpacity  
-        onPress={()=>navigation.navigate('BookAppointment',{doctorId})}
-        style={styles.bookButton}>
-          <Text style={styles.bookButtonText}>Book Appointment</Text>
-        </TouchableOpacity>
-      </View>
-
+        <View style={{ marginTop: 60 }}>
+          <TouchableOpacity
+onPress={() =>
+  navigation.navigate('BookAppointment', {
+    doctorId: doctorId,
+    consultationFee: consultationFee,
+  })
+}            style={styles.bookButton}
+          >
+            <Text style={styles.bookButtonText}>Book Appointment</Text>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -221,18 +217,24 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
-    paddingHorizontal: 16,
+    // backgroundColor:"red"
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+    backgroundColor: '#fff',
   },
   headerTitle: {
+    flex: 1,
+    textAlign: 'center',
     fontSize: 18,
     fontWeight: '600',
     color: '#000',
+    fontFamily: 'Poppins-SemiBold',
   },
   profileSection: {
     alignItems: 'center',
@@ -245,42 +247,54 @@ const styles = StyleSheet.create({
   },
   doctorName: {
     fontSize: 20,
-    fontWeight: '700',
     color: '#000',
     marginTop: 10,
+        fontFamily: 'Poppins-SemiBold',
+
   },
   specialization: {
     fontSize: 15,
     color: '#777',
+        fontFamily: 'Poppins-Medium',
+
   },
   experience: {
     fontSize: 14,
     color: '#999',
+        fontFamily: 'Poppins-Regular',
+
   },
   section: {
     marginTop: 25,
+    paddingHorizontal: 16,
   },
   sectionTitle: {
     fontSize: 16,
-    fontWeight: '700',
+    // fontWeight: '700',
     color: '#000',
     marginBottom: 8,
+            fontFamily: 'Poppins-Medium',
+
   },
   aboutText: {
     color: '#555',
     lineHeight: 20,
+            fontFamily: 'Poppins-Regular',
+
   },
   infoText: {
     color: '#444',
-    fontSize:12,
-    fontWeight:'500',
+    fontSize: 12,
+    fontWeight: '500',
+            fontFamily: 'Poppins-Regular',
+
   },
   slotRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
   },
   slotButton: {
-    backgroundColor: '#ff5500',
+    backgroundColor: '#E66A2C',
     borderRadius: 8,
     paddingVertical: 6,
     paddingHorizontal: 12,
@@ -288,7 +302,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   slotButtonSecondary: {
-    backgroundColor: '#ff5500',
+    backgroundColor: '#E66A2C',
     borderRadius: 8,
     paddingVertical: 6,
     paddingHorizontal: 12,
@@ -296,7 +310,9 @@ const styles = StyleSheet.create({
   },
   slotText: {
     color: '#fff',
-    fontWeight: '600',
+    // fontWeight: '600',
+            fontFamily: 'Poppins-Regular',
+
   },
   ratingRow: {
     flexDirection: 'row',
@@ -332,7 +348,7 @@ const styles = StyleSheet.create({
   },
   barFill: {
     height: 6,
-    backgroundColor: '#ff5500',
+    backgroundColor: '#E66A2C',
     borderRadius: 5,
   },
   barPercent: {
@@ -372,40 +388,44 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
   bookButton: {
-    backgroundColor: '#ff5500',
+    backgroundColor: '#E66A2C',
     borderRadius: 10,
     paddingVertical: 14,
     alignItems: 'center',
     marginVertical: 30,
+    width: '92%',
+    alignSelf: 'center',
   },
   bookButtonText: {
     color: '#fff',
-    fontWeight: '700',
+    // fontWeight: '700',
     fontSize: 16,
+            fontFamily: 'Poppins-Regular',
+
   },
   dayButton: {
-  paddingVertical: 10,
-  paddingHorizontal: 18,
-  borderRadius: 10,
-  backgroundColor: "#f5f5f5",
-  marginRight: 10,
-  borderWidth: 1,
-  borderColor: "#ddd",
-},
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+    borderRadius: 10,
+    backgroundColor: '#f5f5f5',
+    marginRight: 10,
+    borderWidth: 1,
+    borderColor: '#ddd',
+  },
+  dayButtonSelected: {
+    backgroundColor: '#E66A2C',
+    borderColor: '#E66A2C',
+  },
+  dayText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#000',
+            fontFamily: 'Poppins-Regular',
 
-dayButtonSelected: {
-  backgroundColor: "#ff5500",
-  borderColor: "#ff5500",
-},
+  },
+  dayTextSelected: {
+    color: '#fff',
+            fontFamily: 'Poppins-Regular',
 
-dayText: {
-  fontSize: 15,
-  fontWeight: "600",
-  color: "#000",
-},
-
-dayTextSelected: {
-  color: "#fff",
-},
-
+  },
 });

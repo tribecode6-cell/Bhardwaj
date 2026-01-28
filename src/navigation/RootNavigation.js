@@ -3,13 +3,16 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { NavigationContainer } from '@react-navigation/native';
 import Login from '../Screens/Login';
 import From from '../Screens/From ';
-import TabNavigation from '../navigation/TabNavigation';
+// import TabNavigation from '../navigation/TabNavigation';
 import DoctorDetails from '../Screens/DoctorDetails';
 import BookAppointment from '../Screens/BookAppointment';
 import Appointment from '../Screens/Appointment';
 import BookBed from '../Screens/BookBed';
 import AvailableBeds from '../Screens/AvailableBeds';
 import AppointmentDetails from '../Screens/AppointmentDetails';
+import RescheduleAppointment from '../Screens/RescheduleAppointment';
+import EventsDetail from '../Screens/EventsDetail';
+import Notifications from '../Screens/Notifications';
 import OPD from '../Screens/OPD';
 import BedBookingStatus from '../Screens/BedBookingStatus';
 import AdmissionDetails from '../Screens/AdmissionDetails';
@@ -25,13 +28,17 @@ import MedicalHistory from '../Screens/MedicalHistory';
 import ReportView from '../Screens/ReportView';
 import Splash from '../Screens/Splash';
 import Otp from '../Screens/Otp';
+import Chat from '../Screens/Chat';
+import Evants from '../Screens/Evants';
+import Services from '../Screens/Services';
 import UpdateProfile from'../Screens/UpdateProfile';
-
-
+import TabNavigation from '../navigation/TabNavigation';
+import Doctor from "../Screens/Doctor"
 const Stack = createNativeStackNavigator();
 
  const RootNavigation =()=> {
   return (
+  
     <NavigationContainer>
       <Stack.Navigator>
          {/* <Stack.Screen
@@ -64,14 +71,35 @@ const Stack = createNativeStackNavigator();
           component={DoctorDetails}
           options={{ headerShown: false }}
         />
+         <Stack.Screen
+          name="Doctor"
+          component={Doctor}
+          options={{ headerShown: false }}
+        />
         <Stack.Screen
           name="BookAppointment"
           component={BookAppointment}
           options={{ headerShown: false }}
         />
         <Stack.Screen
+          name="Notifications"
+          component={Notifications}
+          options={{ headerShown: false }}
+        />
+        
+        <Stack.Screen
           name="Appointment"
           component={Appointment}
+          options={{ headerShown: false }}
+        />
+         <Stack.Screen
+          name="EventsDetail"
+          component={EventsDetail}
+          options={{ headerShown: false }}
+        />
+           <Stack.Screen
+          name="Chat"
+          component={Chat}
           options={{ headerShown: false }}
         />
         <Stack.Screen
@@ -87,6 +115,12 @@ const Stack = createNativeStackNavigator();
          <Stack.Screen
           name="AppointmentDetails"
           component={AppointmentDetails}
+          options={{ headerShown: false }}
+        />
+        
+             <Stack.Screen
+          name="RescheduleAppointment"
+          component={RescheduleAppointment}
           options={{ headerShown: false }}
         />
          <Stack.Screen
@@ -132,6 +166,16 @@ const Stack = createNativeStackNavigator();
          <Stack.Screen
           name="Emergency"
           component={Emergency}
+          options={{ headerShown: false }}
+        />
+          <Stack.Screen
+          name="Evants"
+          component={Evants}
+          options={{ headerShown: false }}
+        />
+          <Stack.Screen
+          name="Services"
+          component={Services}
           options={{ headerShown: false }}
         />
          <Stack.Screen

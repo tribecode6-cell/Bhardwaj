@@ -4,7 +4,6 @@ import {
   Text,
   TextInput,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   TouchableOpacity,
   Image,
@@ -15,8 +14,8 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { Picker } from '@react-native-picker/picker';
 import { launchImageLibrary } from 'react-native-image-picker';
 import { useNavigation } from '@react-navigation/native';
-import axios from "axios";
-// import AsyncStorage from "@react-native-async-storage/async-storage";
+import axios from 'axios';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const Form = () => {
   const navigation = useNavigation();
@@ -38,7 +37,7 @@ const Form = () => {
   const [photo, setPhoto] = useState(null);
 
   const handleImagePick = () => {
-    launchImageLibrary({ mediaType: 'photo', quality: 1 }, (response) => {
+    launchImageLibrary({ mediaType: 'photo', quality: 1 }, response => {
       if (response?.assets?.length > 0) {
         setPhoto(response.assets[0].uri);
       }
@@ -57,89 +56,81 @@ const Form = () => {
       !form.emergencyContact ||
       !form.alternateContact
     )
-    
-    // {
-    //   Alert.alert("Missing Information", "Please fill all required fields.");
-    //   return;
-    // }
-     if (form.phone.length !==10){
-      Alert.alert("Invalid Number", "Phone number must be 10 digits.");
-      return;
-    }
+      if (form.phone.length !== 10) {
+        // {
+        //   Alert.alert("Missing Information", "Please fill all required fields.");
+        //   return;
+        // }
+        Alert.alert('Invalid Number', 'Phone number must be 10 digits.');
+        return;
+      }
 
-      if (form.emergencyContact.length !==10){
-      Alert.alert("Invalid Number", "Phone number must be 10 digits.");
+    if (form.emergencyContact.length !== 10) {
+      Alert.alert('Invalid Number', 'Phone number must be 10 digits.');
       return;
     }
-     if (form.alternateContact.length !==10){
-      Alert.alert("Invalid Number", "Phone number must be 10 digits.");
+    if (form.alternateContact.length !== 10) {
+      Alert.alert('Invalid Number', 'Phone number must be 10 digits.');
       return;
     }
-
 
     setLoading(true);
 
     try {
       const formData = new FormData();
 
-      formData.append("name", form.fullName);
-      formData.append("email", form.email);
-      formData.append("phone", form.phone);
-      formData.append("password", "123456");
-      formData.append("gender", form.gender);
-      formData.append("age", form.age);
-      formData.append("address", form.address);
-      formData.append("emergency_contact_number", form.emergencyContact);
-      formData.append("alternate_contact_number", form.alternateContact);
-      formData.append("basic_medical_history", form.history);
-      console.log(formData)
+      formData.append('name', form.fullName);
+      formData.append('email', form.email);
+      formData.append('phone', form.phone);
+      formData.append('password', '123456');
+      formData.append('gender', form.gender);
+      formData.append('age', form.age);
+      formData.append('address', form.address);
+      formData.append('emergency_contact_number', form.emergencyContact);
+      formData.append('alternate_contact_number', form.alternateContact);
+      formData.append('basic_medical_history', form.history);
+      console.log('Form', formData);
 
       if (photo) {
-        formData.append("profile_image", {
+        formData.append('profile_image', {
           uri: photo,
-          type: "image/jpeg",
-          name: "profile.jpg",
+          type: 'image/jpeg',
+          name: 'profile.jpg',
         });
       }
 
       const response = await axios.post(
-        "https://argosmob.uk/bhardwaj-hospital/public/api/auth/register",
+        'https://argosmob.uk/bhardwaj-hospital/public/api/auth/register',
         formData,
-        { headers: { "Content-Type": "multipart/form-data" } }
+        { headers: { 'Content-Type': 'multipart/form-data' } },
       );
 
-      console.log("API Response:", response.data.status);
+      console.log('API Response:', response.data.status);
 
-      if (response.data?.status == "true") {
-        Alert.alert("Success", "Registration Complete!");
+      if (response.data?.status == 'true') {
+        Alert.alert('Success', 'Registration Complete!');
 
-        navigation.navigate("Login", {
+        navigation.navigate('Login', {
           userData: form,
           photo: photo,
         });
       } else {
-        Alert.alert("Error", response.data.error || "Failed to register.");
+        Alert.alert('Error', response.data.error || 'Failed to register.');
       }
     } catch (error) {
-      console.log("API Error:", error?.response?.data);
+      console.log('API Error:', error?.response?.data);
       Alert.alert(
-        "Error",
-        error?.response?.data?.error || "Something went wrong, try again."
+        'Error',
+        error?.response?.data?.error || 'Something went wrong, try again.',
       );
     }
-
     setLoading(false);
   };
-
-
-
-
 
   return (
     <SafeAreaView style={styles.safe}>
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
       <ScrollView showsVerticalScrollIndicator={false} style={styles.scroll}>
-        
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
@@ -154,7 +145,7 @@ const Form = () => {
           style={styles.input}
           placeholder="Enter full name"
           value={form.fullName}
-          onChangeText={(val) => setForm({ ...form, fullName: val })}
+          onChangeText={val => setForm({ ...form, fullName: val })}
         />
 
         {/* Email */}
@@ -164,15 +155,15 @@ const Form = () => {
           placeholder="Enter email"
           keyboardType="email-address"
           value={form.email}
-          onChangeText={(val) => setForm({ ...form, email: val })}
+          onChangeText={val => setForm({ ...form, email: val })}
         />
-          <Text style={styles.label}>Phone Number</Text>
+        <Text style={styles.label}>Phone Number</Text>
         <TextInput
           style={styles.input}
           placeholder="Enter phone number"
           keyboardType="phone-pad"
           value={form.phone}
-          onChangeText={(val) => setForm({ ...form, phone: val })}
+          onChangeText={val => setForm({ ...form, phone: val })}
         />
 
         {/* Gender */}
@@ -180,7 +171,7 @@ const Form = () => {
         <View style={styles.pickerContainer}>
           <Picker
             selectedValue={form.gender}
-            onValueChange={(val) => setForm({ ...form, gender: val })}
+            onValueChange={val => setForm({ ...form, gender: val })}
           >
             <Picker.Item label="Select gender" value="" />
             <Picker.Item label="Male" value="male" />
@@ -196,7 +187,7 @@ const Form = () => {
           placeholder="Enter age"
           keyboardType="numeric"
           value={form.age}
-          onChangeText={(val) => setForm({ ...form, age: val })}
+          onChangeText={val => setForm({ ...form, age: val })}
         />
 
         {/* Address */}
@@ -206,7 +197,7 @@ const Form = () => {
           placeholder="Enter address"
           multiline
           value={form.address}
-          onChangeText={(val) => setForm({ ...form, address: val })}
+          onChangeText={val => setForm({ ...form, address: val })}
         />
 
         {/* Emergency Contact */}
@@ -216,7 +207,7 @@ const Form = () => {
           placeholder="Enter phone number"
           keyboardType="phone-pad"
           value={form.emergencyContact}
-          onChangeText={(val) => setForm({ ...form, emergencyContact: val })}
+          onChangeText={val => setForm({ ...form, emergencyContact: val })}
         />
 
         {/* Alternate Contact */}
@@ -226,7 +217,7 @@ const Form = () => {
           placeholder="Enter phone number"
           keyboardType="phone-pad"
           value={form.alternateContact}
-          onChangeText={(val) => setForm({ ...form, alternateContact: val })}
+          onChangeText={val => setForm({ ...form, alternateContact: val })}
         />
 
         {/* History */}
@@ -236,7 +227,7 @@ const Form = () => {
           multiline
           placeholder="Enter medical history"
           value={form.history}
-          onChangeText={(val) => setForm({ ...form, history: val })}
+          onChangeText={val => setForm({ ...form, history: val })}
         />
 
         {/* Upload */}
@@ -247,15 +238,19 @@ const Form = () => {
           <Text style={styles.uploadTextRight}>Upload Profile Photo</Text>
         </View>
 
-        {photo && <Image source={{ uri: photo }} style={styles.uploadedImage} />}
+        {photo && (
+          <Image source={{ uri: photo }} style={styles.uploadedImage} />
+        )}
 
         {/* Register Button */}
-        <TouchableOpacity style={styles.registerButton} onPress={handleRegister}>
+        <TouchableOpacity
+          style={styles.registerButton}
+          onPress={handleRegister}
+        >
           <Text style={styles.registerText}>
-            {loading ? "Please wait..." : "Register"}
+            {loading ? 'Please wait...' : 'Register'}
           </Text>
         </TouchableOpacity>
-
       </ScrollView>
     </SafeAreaView>
   );
@@ -274,13 +269,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 15,
-    marginTop: 10,
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: '700',
     color: '#000',
     marginLeft: 10,
+    fontFamily: 'Poppins-SemiBold',
   },
   label: {
     fontWeight: '600',
@@ -288,6 +282,7 @@ const styles = StyleSheet.create({
     color: '#000',
     marginTop: 12,
     marginBottom: 5,
+    fontFamily: 'Poppins-Medium',
   },
   input: {
     backgroundColor: '#f1f6f7',
@@ -296,6 +291,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     fontSize: 14,
     color: '#000',
+    fontFamily: 'Poppins-Regular',
   },
   pickerContainer: {
     backgroundColor: '#f1f6f7',
@@ -319,6 +315,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '500',
     color: '#000',
+    fontFamily: 'Poppins-Regular',
   },
   uploadedImage: {
     width: 110,
@@ -333,10 +330,12 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
     marginVertical: 30,
+    fontFamily: 'Poppins-SemiBold',
   },
   registerText: {
     color: '#fff',
     fontWeight: '700',
     fontSize: 16,
+    fontFamily: 'Poppins-Medium',
   },
 });

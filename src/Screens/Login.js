@@ -1,22 +1,21 @@
 import {
   View,
   Text,
-  SafeAreaView,
   StatusBar,
   StyleSheet,
   TextInput,
   TouchableOpacity,
   Alert,
-  ActivityIndicator
+  ActivityIndicator,
 } from 'react-native';
 import React, { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import axios from 'axios';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const Login = () => {
   const navigation = useNavigation();
-
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -25,12 +24,12 @@ const Login = () => {
     const emailRegex = /\S+@\S+\.\S+/;
 
     if (!email) {
-      setError("Please enter email");
+      setError('Please enter email');
       return false;
     }
 
     if (!emailRegex.test(email)) {
-      setError("Enter a valid email address");
+      setError('Enter a valid email address');
       return false;
     }
 
@@ -45,27 +44,25 @@ const Login = () => {
     setLoading(true);
     try {
       const response = await axios.post(
-        "https://argosmob.uk/bhardwaj-hospital/public/api/auth/request-otp",
-        { email:email }
+        'https://argosmob.uk/bhardwaj-hospital/public/api/auth/request-otp',
+        { email: email },
       );
 
-      console.log("OTP API Response:", response.data);
-
-      if (response.data.status == "true") {
-        Alert.alert("Success", `OTP sent to: ${email}`);
+      console.log('OTP API Response:', response.data);
+      if (response.data.status == 'true') {
+        Alert.alert('Success', `OTP sent to: ${email}`);
 
         navigation.navigate('Otp', {
-          // loginMode: "email",
           email: email,
         });
-
       } else {
-        setError(response.data.message || "Something went wrong");
+        console.log("Error",response.data.message);
+        
+        setError(response.data.message || 'Something went wrong');
       }
-
     } catch (err) {
-      console.log("Error:", err);
-      setError("Server error, try again later");
+      console.log('Error:', err);
+      setError('Server error, try again later');
     }
 
     setLoading(false);
@@ -85,7 +82,7 @@ const Login = () => {
             placeholder="Enter your email"
             style={styles.input}
             keyboardType="email-address"
-            onChangeText={(text) => {
+            onChangeText={text => {
               setEmail(text);
               setError('');
             }}
@@ -107,11 +104,25 @@ const Login = () => {
               )}
             </TouchableOpacity>
 
-            <TouchableOpacity  
-            onPress={()=>navigation.navigate('From')}
-            style={{ marginTop:20, alignContent:'center', alignItems:'center' , flexDirection:'row',justifyContent:'center'}}>
-              <Text style={{fontSize:18}}>If You have Not Signup </Text>
-              <Icon name = "arrow-right" size ={25} marginHorizontal={10} color="#092aeaff"/>
+            <TouchableOpacity
+              onPress={() => navigation.navigate('From')}
+              style={{
+                marginTop: 20,
+                alignContent: 'center',
+                alignItems: 'center',
+                flexDirection: 'row',
+                justifyContent: 'center',
+              }}
+            >
+              <Text style={{ fontSize: 18, fontFamily: 'Poppins-Regular' }}>
+                If You have Not Signup{' '}
+              </Text>
+              <Icon
+                name="arrow-right"
+                size={25}
+                marginHorizontal={10}
+                color="#092aeaff"
+              />
             </TouchableOpacity>
           </View>
         </View>
@@ -134,7 +145,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 24,
-    fontWeight: '600',
+    fontFamily: 'Poppins-SemiBold',
   },
   innerView2: {
     marginTop: 20,
@@ -143,6 +154,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
     marginBottom: 10,
+    fontFamily: 'Poppins-Regular',
   },
   input: {
     borderWidth: 1,
@@ -154,11 +166,13 @@ const styles = StyleSheet.create({
     height: 50,
     fontSize: 16,
     color: '#000',
+    fontFamily: 'Poppins-Regular',
   },
   errorText: {
     color: 'red',
     fontSize: 14,
     marginBottom: 10,
+    fontFamily: 'Poppins-Regular',
   },
   butview: {
     height: 60,
@@ -175,5 +189,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: '600',
     fontSize: 18,
+    fontFamily: 'Poppins-SemiBold',
   },
 });
