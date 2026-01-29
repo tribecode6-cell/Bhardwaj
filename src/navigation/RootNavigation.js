@@ -34,6 +34,7 @@ import Services from '../Screens/Services';
 import UpdateProfile from'../Screens/UpdateProfile';
 import TabNavigation from '../navigation/TabNavigation';
 import Doctor from "../Screens/Doctor"
+import VideoCall from "../Component/VideoCall"
 const Stack = createNativeStackNavigator();
 
  const RootNavigation =()=> {
@@ -61,6 +62,11 @@ const Stack = createNativeStackNavigator();
           component={From}
           options={{ headerShown: false }}
         />
+        <Stack.Screen 
+  name="VideoCall" 
+  component={VideoCall}
+  options={{ headerShown: false }}
+/>
          <Stack.Screen
           name="TabNavigation"
           component={TabNavigation}

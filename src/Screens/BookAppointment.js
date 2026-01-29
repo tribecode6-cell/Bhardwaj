@@ -136,6 +136,7 @@ const BookAppointment = () => {
 
   useEffect(() => {
     getResources();
+    handleSlotSelect()
   }, []);
 
   // Add this function to handle Razorpay payment
@@ -239,7 +240,6 @@ const BookAppointment = () => {
         },
         theme: { color: '#E66A2C' },
       };
-      console.log('utdktrjsjdfsjfsjgsjgsjdjdixdtdxtxtxctxitxditrdxi', options);
       // 4️⃣ Open Razorpay
       const data = await RazorpayCheckout.open(options);
       console.log('✅ Payment Success id:', data?.razorpay_payment_id);
@@ -261,8 +261,8 @@ const BookAppointment = () => {
         },
       );
 console.log("res",res);
-
-      Alert.alert('Success', 'Appointment booked successfully');
+bookAppointmentAPI()
+      // Alert.alert('Success', 'Appointment booked successfully');
     } catch (error) {
       console.log('❌ Payment Error:', error);
       Alert.alert(
@@ -299,7 +299,6 @@ console.log("res",res);
         type: appointmentType,
       };
       console.log('📤 Payload being sent:', payload); // ✅ ADDED: Debug log
-      return;
       const response = await axios.post(
         'https://argosmob.uk/bhardwaj-hospital/public/api/appointments/save',
         payload,
@@ -311,7 +310,7 @@ console.log("res",res);
         },
       );
 
-      alert('🎉 Appointment booked successfully!');
+      alert('🎉 Appointment booked successfull');
       navigation.navigate('Appointment');
     } catch (error) {
       console.log(
