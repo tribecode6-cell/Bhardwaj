@@ -245,7 +245,6 @@ class VideoCall extends Component {
 
   leaveChannel = async () => {
     try {
-      // Stop preview first
       await this.engine.stopPreview();
       await this.engine.leaveChannel();
       await this.engine.release();
@@ -276,7 +275,6 @@ class VideoCall extends Component {
     }
   };
 
-  /* ================= VIDEO RENDER ================= */
   renderLocalVideo() {
     const { isJoined, isVideoEnabled } = this.state;
 
@@ -294,7 +292,7 @@ class VideoCall extends Component {
         style={styles.localVideo}
         canvas={{ uid: 0 }}
         renderMode={1}
-        key="local-video" // Add key to force re-render
+        key="local-video" 
       />
     );
   }

@@ -161,16 +161,21 @@ setBanner(bannerData);
   useFocusEffect(
     useCallback(() => {
       console.log('🔄 Screen focused - refreshing user data');
-      setImageKey(Date.now()); // ✅ Force image cache bust
+      setImageKey(Date.now()); 
       getuserinfo(); 
       loadFavourites();
     }, []),
   );
 
   return (
-<SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
-      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+    <>
 
+<SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+    <StatusBar
+  barStyle="dark-content"
+  backgroundColor="#fff"
+  translucent={false}
+/>
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingHorizontal: 16 }}
@@ -194,12 +199,15 @@ setBanner(bannerData);
               source={
                 user?.profile_picture
                   ? {
-                      uri: `https://argosmob.uk/bhardwaj-hospital/storage/app/public/profiles/banners/${user.profile_picture}`,
+                      uri: `https://argosmob.uk/bhardwaj-hospital/storage/app/public/profiles/${user.profile_picture}`,
                     }    
                   : require('../assets/Images/Splash.png')
               }
               style={styles.profileImage}
             />
+            
+
+            
           </View>
         </View>
 
@@ -316,6 +324,7 @@ setBanner(bannerData);
         )}
       </ScrollView>
     </SafeAreaView>
+    </>
   );
 };
 

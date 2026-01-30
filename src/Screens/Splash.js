@@ -7,19 +7,33 @@ const Splash = () => {
   const navigation = useNavigation();
 
   useEffect(() => {
-    checkLoginStatus();
+    checkToken();
   }, []);
 
-  const checkLoginStatus = async () => {
-    const token = await AsyncStorage.getItem("access_token");
+  const checkToken = async () => {
+    try {
+      // Wait for 2 seconds to show splash screen
+      await new Promise(resolve => setTimeout(resolve, 2000));
 
-    setTimeout(() => {
-      if (token) {
-        navigation.replace('TabNavigation'); // Direct home
+      // Check if token exists in AsyncStorage
+      const token = await AsyncStorage.getItem('access_token');
+      
+      console.log('Token check:', token ? 'Token exists' : 'No token found');
+
+      if (token && token.trim() !== '') {
+        // Token exists, user is logged in - navigate to TabNavigation
+        console.log('Navigating to TabNavigation');
+        navigation.replace('TabNavigation');
       } else {
-        navigation.replace('Login'); // Go to login
+        // No token, user needs to login - navigate to Login
+        console.log('Navigating to Login');
+        navigation.replace('Login');
       }
-    }, 3000);
+    } catch (error) {
+      console.log('Error checking token:', error);
+      // On error, navigate to Login for safety
+      navigation.replace('Login');
+    }
   };
 
   return (

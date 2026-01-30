@@ -1,6 +1,4 @@
-// import React, { useEffect, useState ,Linking} from 'react';
 import React, { useEffect, useState } from 'react';
-
 import {
   View,
   Text,
@@ -45,7 +43,7 @@ const EventsDetail = () => {
           },
         }
       );
-console.log("Events Detail",response.data.data);
+      console.log("Events Detail", response.data.data);
 
       setEvent(response.data.data);
     } catch (error) {
@@ -59,6 +57,55 @@ console.log("Events Detail",response.data.data);
   useEffect(() => {
     getEventDetail();
   }, []);
+
+  const openFacebook = async (url) => {
+    if (!url || url.trim() === '') {
+      Alert.alert('URL Not Available', 'Facebook link not provided');
+      return;
+    }
+
+    const webUrl = url.startsWith('http') ? url : `https://${url}`;
+    const fbAppUrl = webUrl.replace(
+      'https://www.facebook.com',
+      'fb://facewebmodal/f?href='
+    );
+
+    try {
+      await Linking.openURL(fbAppUrl);
+    } catch {
+      await Linking.openURL(webUrl);
+    }
+  };
+
+  const openSocialLink = async (url, platformName) => {
+    if (!url || url.trim() === '') {
+      Alert.alert(
+        'URL Not Available',
+        `${platformName} link not provided by organizer`
+      );
+      return;
+    }
+
+    const finalUrl = url.startsWith('http') ? url : `https://${url}`;
+
+    try {
+      const supported = await Linking.canOpenURL(finalUrl);
+      if (supported) {
+        await Linking.openURL(finalUrl);
+      } else {
+        Alert.alert('Error', 'Cannot open this link');
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Something went wrong while opening the link');
+    }
+  };
+
+  // Function to format URLs for display
+  const formatUrlForDisplay = (url) => {
+    if (!url) return '';
+    // Remove protocol for cleaner display
+    return url.replace(/^https?:\/\/(www\.)?/, '');
+  };
 
   if (loading) {
     return (
@@ -75,65 +122,6 @@ console.log("Events Detail",response.data.data);
       </View>
     );
   }
-const openSocialUrl = async (url) => {
-  if (!url || url.trim() === '') {
-    return; // ❌ no log, no open
-  }
-
-  console.log('Opening social URL:', url); // ✅ log only valid URL
-
-  try {
-    const supported = await Linking.canOpenURL(url);
-    if (supported) {
-      await Linking.openURL(url);
-    }
-  } catch (error) {
-    console.log('Failed to open URL:', url);
-  }
-};
-
-const openFacebook = async (url) => {
-  if (!url || url.trim() === '') {
-    Alert.alert('Url Not Available', 'Facebook link not provided');
-    return;
-  }
-
-  const webUrl = url.startsWith('http') ? url : `https://${url}`;
-  const fbAppUrl = webUrl.replace(
-    'https://www.facebook.com',
-    'fb://facewebmodal/f?href='
-  );
-
-  try {
-    await Linking.openURL(fbAppUrl);
-  } catch {
-    await Linking.openURL(webUrl);
-  }
-};
-
-
-const openSocialLink = async (url, platformName) => {
-  if (!url || url.trim() === '') {
-    Alert.alert(
-      'Url Not Available Geting null',
-      `${platformName} link not provided by organizer`
-    );
-    return;
-  }
-
-  const finalUrl = url.startsWith('http') ? url : `https://${url}`;
-
-  try {
-    const supported = await Linking.canOpenURL(finalUrl);
-    if (supported) {
-      await Linking.openURL(finalUrl);
-    } else {
-      Alert.alert('Error', 'Cannot open this link Getting url is null');
-    }
-  } catch (error) {
-    Alert.alert('Error', 'Something went wrong while opening the link');
-  }
-};
 
   return (
     <SafeAreaView style={styles.container}>
@@ -148,16 +136,19 @@ const openSocialLink = async (url, platformName) => {
         <View style={{ width: 24 }} />
       </View>
 
-      <ScrollView contentContainerStyle={{ padding: 20 }}>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        {/* Organizer */}
+        <Text style={styles.eventOrganizer}>
+          {event.organizer || 'Organizer not available'}
+        </Text>
+
         {/* Event Image */}
- <Text style={styles.eventOrganizer}>
-    {event.organizer || 'Organizer not available'}
-  </Text>
         <Image
           source={{
             uri: `https://argosmob.uk/bhardwaj-hospital/storage/app/public/events/${event.image}`,
           }}
           style={styles.eventImage}
+          // defaultSource={require('../assets/placeholder.png')}
         />
 
         {/* Title */}
@@ -167,81 +158,113 @@ const openSocialLink = async (url, platformName) => {
         <Text style={styles.eventType}>
           {event.type.replace('_', ' ').toUpperCase()}
         </Text>
- <Text style={styles.info}>
-       Contact Person :- {event.contact_person || 'contact person not available'}
 
-  </Text>
-  <Text style={styles.info}>
-   Contact Number :- {event.contact_number || 'contact number not available'}
-  </Text>
-  <Text style={[styles.info,{marginBottom:8}]}>
-   Email :-  {event.email || 'Organizer not available'}
-  </Text>
+        {/* Contact Information */}
+        <Text style={styles.info}>
+          Contact Person: {event.contact_person || 'Contact person not available'}
+        </Text>
+        <Text style={styles.info}>
+          Contact Number: {event.contact_number || 'Contact number not available'}
+        </Text>
+        <Text style={[styles.info, { marginBottom: 8 }]}>
+          Email: {event.email || 'Email not available'}
+        </Text>
+
+        {/* Website URL - IMPROVED WITH BLUE LINK */}
+        {event.website_url && event.website_url.trim() !== '' && (
+          <View style={styles.websiteContainer}>
+            <Text style={styles.websiteLabel}>More Details: </Text>
+            <TouchableOpacity
+              onPress={() => openSocialLink(event.website_url, 'Website')}
+              style={styles.websiteLinkContainer}
+            >
+              <Icon name="link" size={14} color="#2196F3" style={styles.linkIcon} />
+              <Text style={styles.websiteLink} numberOfLines={1}>
+                {formatUrlForDisplay(event.website_url)}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
         {/* Description */}
         <Text style={styles.eventDesc}>{event.description}</Text>
 
-        {/* Date */}
-        <View style={styles.row}>
-          <Icon name="calendar" size={16} color="#666" />
-          <Text style={styles.metaText}>
-            {new Date(event.event_date).toDateString()}
-          </Text>
+        {/* Event Details Container */}
+        <View style={styles.detailsContainer}>
+          {/* Date */}
+          <View style={styles.detailRow}>
+            <Icon name="calendar" size={18} color="#666" />
+            <Text style={styles.detailText}>
+              {new Date(event.event_date).toDateString()}
+            </Text>
+          </View>
+
+          {/* Time */}
+          <View style={styles.detailRow}>
+            <Icon name="clock-outline" size={18} color="#666" />
+            <Text style={styles.detailText}>
+              {event.start_time} - {event.end_time}
+            </Text>
+          </View>
+
+          {/* Venue */}
+          <View style={styles.detailRow}>
+            <Icon name="map-marker" size={18} color="#666" />
+            <Text style={styles.detailText}>{event.venue}</Text>
+          </View>
         </View>
 
-        {/* Time */}
-        <View style={styles.row}>
-          <Icon name="clock-outline" size={16} color="#666" />
-          <Text style={styles.metaText}>
-            {event.start_time} - {event.end_time}
-          </Text>
+        {/* Social Media Icons */}
+        <View style={styles.socialContainer}>
+          {/* Facebook */}
+          <TouchableOpacity 
+            style={styles.socialButton}
+            onPress={() => openFacebook(event.facebook_url)}
+          >
+            <Image
+              source={require('../assets/facebook.png')}
+              style={styles.socialIcon}
+              resizeMode="contain"
+            />
+            <Text style={styles.socialText}>Facebook</Text>
+          </TouchableOpacity>
+
+          {/* Instagram */}
+          <TouchableOpacity
+            style={styles.socialButton}
+            onPress={() => openSocialLink(event.instagram_url, 'Instagram')}
+          >
+            <Image
+              source={require('../assets/instagram.png')}
+              style={styles.socialIcon}
+              resizeMode="contain"
+            />
+            <Text style={styles.socialText}>Instagram</Text>
+          </TouchableOpacity>
+
+          {/* LinkedIn */}
+          <TouchableOpacity
+            style={styles.socialButton}
+            onPress={() => openSocialLink(event.linkedin_url, 'LinkedIn')}
+          >
+            <Image
+              source={require('../assets/linkedin.png')}
+              style={styles.socialIcon}
+              resizeMode="contain"
+            />
+            <Text style={styles.socialText}>LinkedIn</Text>
+          </TouchableOpacity>
+
+          {/* Feedback */}
+          <TouchableOpacity style={styles.socialButton}>
+            <Image
+              source={require('../assets/feedback.png')}
+              style={styles.socialIcon}
+              resizeMode="contain"
+            />
+            <Text style={styles.socialText}>Feedback</Text>
+          </TouchableOpacity>
         </View>
-
-        {/* Venue */}
-        <View style={styles.row}>
-          <Icon name="map-marker" size={16} color="#666" />
-          <Text style={styles.metaText}>{event.venue}</Text>
-        </View>
-
-       <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginTop: 16 }}>
-  {/* Facebook */}
-  <TouchableOpacity onPress={() => openFacebook(event.facebook_url)}>
-  <Image
-    source={require('../assets/facebook.png')} // make sure file name is correct
-    style={{ width: 50, height: 50 }} // adjust size as needed
-    resizeMode="contain"
-  />
-</TouchableOpacity>
-
-  {/* Instagram */}
-<TouchableOpacity onPress={() =>
-      openSocialLink(event.instagram_url, 'Instagram')
-    }>
-  <Image
-    source={require('../assets/instagram.png')} // make sure file name is correct
-    style={{ width: 50, height: 50 }} // adjust size as needed
-    resizeMode="contain"
-  />
-</TouchableOpacity>
-
-<TouchableOpacity  onPress={() =>
-      openSocialLink(event.linkedin_url, 'LinkedIn')
-    }>
-  <Image
-    source={require('../assets/linkedin.png')} // make sure file name is correct
-    style={{ width: 50, height: 50 }} // adjust size as needed
-    resizeMode="contain"
-  />
-</TouchableOpacity>
-<TouchableOpacity  
-    >
-  <Image
-    source={require('../assets/feedback.png')} // make sure file name is correct
-    style={{ width: 50, height: 50 }} // adjust size as needed
-    resizeMode="contain"
-  />
-</TouchableOpacity>
-
-</View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -268,64 +291,137 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
   },
   headerTitle: {
     flex: 1,
     textAlign: 'center',
     fontSize: 18,
-  fontFamily:"Poppins-SemiBold",
-      marginRight: 24,
+    fontFamily: 'Poppins-SemiBold',
+    marginRight: 24,
+  },
+  scrollContent: {
+    padding: 16,
   },
   eventImage: {
     width: '100%',
-    height: 200,
-    borderRadius: 14,
+    height: 220,
+    borderRadius: 12,
     marginBottom: 16,
-    backgroundColor: '#eee',
+    backgroundColor: '#f5f5f5',
   },
   eventTitle: {
-    fontSize: 20,
+    fontSize: 22,
     color: '#000',
     marginBottom: 6,
-      fontFamily:"Poppins-SemiBold",
+    fontFamily: 'Poppins-SemiBold',
   },
   eventType: {
     fontSize: 14,
     color: '#ff5722',
     fontWeight: '600',
-    marginBottom: 12,
+    marginBottom: 16,
+    backgroundColor: '#ffebee',
+    alignSelf: 'flex-start',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 6,
   },
   eventDesc: {
     fontSize: 15,
     color: '#666',
-    marginBottom: 16,
-      fontFamily:"Poppins-Regular",
-
+    marginBottom: 20,
+    fontFamily: 'Poppins-Regular',
+    lineHeight: 22,
   },
-  row: {
+  eventOrganizer: {
+    fontSize: 20,
+    fontFamily: 'Poppins-Medium',
+    color: '#333',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  info: {
+    fontSize: 15,
+    color: '#333',
+    marginBottom: 4,
+    fontFamily: 'Poppins-Regular',
+  },
+  // Website Link Styles
+  websiteContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 16,
+    flexWrap: 'wrap',
   },
-  metaText: {
-    fontSize: 13,
+  websiteLabel: {
+    fontSize: 15,
+    color: '#333',
+    fontFamily: 'Poppins-Regular',
+    marginRight: 5,
+  },
+  websiteLinkContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#e3f2fd',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#bbdefb',
+    flex: 1,
+  },
+  linkIcon: {
+    marginRight: 6,
+  },
+  websiteLink: {
+    fontSize: 14,
+    color: '#2196F3', // Blue color for link
+    fontFamily: 'Poppins-Medium',
+    textDecorationLine: 'underline',
+    flex: 1,
+  },
+  // Event Details Container
+  detailsContainer: {
+    backgroundColor: '#f9f9f9',
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 20,
+  },
+  detailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  detailText: {
+    fontSize: 15,
+    color: '#333',
+    marginLeft: 10,
+    fontFamily: 'Poppins-Medium',
+    flex: 1,
+  },
+  // Social Media Styles
+  socialContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    marginTop: 10,
+  },
+  socialButton: {
+    alignItems: 'center',
+    width: '23%',
+    marginBottom: 10,
+  },
+  socialIcon: {
+    width: 40,
+    height: 40,
+    marginBottom: 5,
+  },
+  socialText: {
+    fontSize: 11,
     color: '#666',
-    marginLeft: 6,
-          fontFamily:"Poppins-Regular",
-
+    textAlign: 'center',
+    fontFamily: 'Poppins-Regular',
   },
-eventOrganizer: {
-  fontSize: 20,
-          fontFamily:"Poppins-Medium",
-  color: '#333',
-  marginBottom: 8,
-  textAlign: "center"  // <-- centers the text
-},
-info:{
-      fontSize: 15,
-  color: '#333',
-  marginBottom: 2,
-          fontFamily:"Poppins-Regular",
-}
-
 });

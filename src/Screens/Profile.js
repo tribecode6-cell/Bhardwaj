@@ -10,10 +10,11 @@ import {
   ActivityIndicator,
   Platform,
   PermissionsAndroid,
-  Alert,Linking
+  Alert,
+  Linking,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { useNavigation, useFocusEffect,CommonActions } from '@react-navigation/native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -91,6 +92,11 @@ const Profile = () => {
   };
 
   const openGallery = async () => {
+    if (Platform.OS === 'android' && Platform.Version >= 33) {
+      PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES,
+      );
+    }
     try {
       const res = await launchImageLibrary({
         mediaType: 'photo',
@@ -119,19 +125,61 @@ const Profile = () => {
     }
   };
 
-  useEffect(() => {
-    if (Platform.OS === 'android' && Platform.Version >= 33) {
-      PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES,
-      );
-    }
-  }, []);
+  // useEffect(() => {
+  //   if (Platform.OS === 'android' && Platform.Version >= 33) {
+  //     PermissionsAndroid.request(
+  //       PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES,
+  //     );
+  //   }
+  // }, []);
 
   // 👉 Logout Function
-  const handleLogout = async () => {
-    await AsyncStorage.removeItem('access_token');
-    navigation.replace('Login');
-  };
+  // const handleLogout = async () => {
+  //   await AsyncStorage.removeItem('access_token');
+  //   navigation.replace('Login');
+  // };
+
+const handleLogout = async (navigation) => {
+  Alert.alert(
+    'Logout',
+    'Are you sure you want to logout?',
+    [
+      {
+        text: 'Cancel',
+        style: 'cancel',
+      },
+      {
+        text: 'Logout',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            // Clear the access token
+            await AsyncStorage.removeItem('access_token');
+            
+            // Clear any other user data if needed
+            // await AsyncStorage.removeItem('user_data');
+            
+            console.log('User logged out successfully');
+
+            // Reset navigation stack and go to Login
+            navigation.dispatch(
+              CommonActions.reset({
+                index: 0,
+                routes: [{ name: 'Login' }],
+              })
+            );
+          } catch (error) {
+            console.log('Error during logout:', error);
+            Alert.alert('Error', 'Failed to logout. Please try again.');
+          }
+        },
+      },
+    ],
+    { cancelable: true }
+  );
+};
+
+
   console.log(
     `https://argosmob.uk/bhardwaj-hospital/storage/app/public/${user?.profile_picture}`,
   );
@@ -148,8 +196,21 @@ const Profile = () => {
     );
   }
 
+  const openExternalLink = async url => {
+    try {
+      const supported = await Linking.canOpenURL(url);
+      if (supported) {
+        await Linking.openURL(url);
+      } else {
+        Alert.alert('Error', 'Cannot open this link');
+      }
+    } catch (error) {
+      console.log('Open URL error:', error);
+    }
+  };
+
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
 
       <View style={styles.header}>
@@ -206,13 +267,11 @@ const Profile = () => {
 
           <Text style={styles.label}>Address</Text>
           <Text style={styles.info}>{user?.address || 'No Address Added'}</Text>
-
         </View>
 
         {/* Account Settings */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Account Settings</Text>
-
           <TouchableOpacity
             onPress={() => navigation.navigate('UpdateProfile', { user })}
             style={styles.settingRow}
@@ -220,24 +279,67 @@ const Profile = () => {
             <Text style={styles.settingText}>Edit Profile</Text>
             <Icon name="pencil-outline" size={22} color="#E66A2C" />
           </TouchableOpacity>
-
           <TouchableOpacity onPress={handleLogout} style={styles.settingRow}>
             <Text style={styles.settingText}>Logout</Text>
             <Icon name="arrow-right" size={22} color="#E66A2C" />
           </TouchableOpacity>
-<TouchableOpacity
-  onPress={() =>
-    Linking.openURL('https://prac.to/IPRCTO/7JZjUBNu').catch((err) =>
-      console.error('Failed to open URL:', err),
-    )
-  }
-  style={styles.settingRow}
->
-  <Text style={styles.settingText}>Treatment Experience Review</Text>
-  <Icon name="arrow-right" size={22} color="#E66A2C" />
-</TouchableOpacity>
+          <TouchableOpacity
+            onPress={() =>
+              Linking.openURL('https://prac.to/IPRCTO/7JZjUBNu').catch(err =>
+                console.error('Failed to open URL:', err),
+              )
+            }
+            style={styles.settingRow}
+          >
+            <Text style={[styles.settingText]}>Rate Our App</Text>
+            <Icon name="star-outline" size={22} color="#E66A2C" />
+          </TouchableOpacity>
+          <Text
+            style={[
+              styles.settingText,
+              {
+                paddingVertical: 12,
+                textAlign: 'center',
+                fontFamily: 'Poppins-SemiBold',
+              },
+            ]}
+          >
+            Application Review's
+          </Text>
 
-
+          <View
+            style={{
+              flexDirection: 'row',
+              marginVertical: 20,
+              justifyContent: 'center',
+              backgroundColor: '',
+              alignItems: 'center',
+              gap: 50,
+            }}
+          >
+            <TouchableOpacity
+              onPress={() =>
+                openExternalLink('https://g.page/r/CTVasghVlFBqEBM/review')
+              }
+              activeOpacity={0.8}
+            >
+              <Image
+                source={require('../assets/google.png')}
+                style={{ width: 50, height: 50 }}
+              />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() =>
+                openExternalLink('https://jsdl.in/RSL-PZK1769154268')
+              }
+              activeOpacity={0.8}
+            >
+              <Image
+                source={require('../assets/star-rating.png')}
+                style={{ width: 50, height: 50 }}
+              />
+            </TouchableOpacity>
+          </View>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -285,8 +387,7 @@ const styles = StyleSheet.create({
   profileRole: {
     color: '#888',
     fontSize: 14,
-        fontFamily: 'Poppins-Medium',
-
+    fontFamily: 'Poppins-Medium',
   },
   section: {
     marginTop: 30,
@@ -296,14 +397,12 @@ const styles = StyleSheet.create({
     // fontWeight: '700',
     color: '#000',
     marginBottom: 10,
-        fontFamily: 'Poppins-SemiBold',
-
+    fontFamily: 'Poppins-SemiBold',
   },
   label: {
     color: '#777',
     fontSize: 14,
-            fontFamily: 'Poppins-Medium',
-
+    fontFamily: 'Poppins-Medium',
   },
   info: {
     fontSize: 15,

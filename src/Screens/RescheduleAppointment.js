@@ -287,7 +287,7 @@ const RescheduleAppointment = () => {
       console.log('✅ Update Response:', response.data);
       alert('🎉 Appointment updated successfully!');
       navigation.navigate('TabNavigation', {
-        screen: 'Appointment',
+        screen: 'Appointments',
         params: { refresh: true },
       });
     } catch (error) {

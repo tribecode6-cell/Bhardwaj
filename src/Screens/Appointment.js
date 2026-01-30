@@ -337,10 +337,10 @@ const handleJoinPress = async (appointmentId) => {
           {appointment.status === 'scheduled' &&
             appointment.type === 'video' && (
               <TouchableOpacity
-                // disabled={!joinEnabled}
+                disabled={!joinEnabled}
                 style={[
                   styles.joinButton,
-                  // !joinEnabled && styles.joinButtonDisabled,
+                  !joinEnabled && styles.joinButtonDisabled,
                 ]}
                 // onPress={() => handleJoinPress(appointment)}
                 onPress={() => {
@@ -365,9 +365,10 @@ const handleJoinPress = async (appointmentId) => {
 
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
+        {/* <TouchableOpacity onPress={() => navigation.goBack()}>
           <Icon name="arrow-left" size={26} />
-        </TouchableOpacity>
+        </TouchableOpacity> */}
+        <View/>
         <Text style={styles.headerTitle}>Appointments</Text>
         <TouchableOpacity onPress={getAppointment}>
           <Icon name="refresh" size={26} />

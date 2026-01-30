@@ -40,12 +40,12 @@ const TabNavigation = () => {
       />
 
       <Tab.Screen
-        name="Doctor"
+        name="Explore"
         component={Doctor}
         options={{
           tabBarIcon: ({ color }) => (
             <Image
-              source={require('../assets/icons/doctor.png')}
+              source={require('../assets/icons/compass.png')}
               style={{ width: 22, height: 22, tintColor: color }}
             />
           ),

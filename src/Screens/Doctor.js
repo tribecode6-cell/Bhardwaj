@@ -28,7 +28,7 @@ const Doctors = () => {
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
 
       <ScrollView contentContainerStyle={{ padding: 16 }}>
-        <Text style={styles.headerTitle}>Explore More</Text>
+        <Text style={styles.headerTitle}>Explore</Text>
 
         {videos.map((item, index) => (
           <View key={item.id}>
@@ -67,9 +67,11 @@ const styles = StyleSheet.create({
   headerTitle: {
     textAlign: 'center',
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: '500',
     marginBottom: 20,
     color: '#000',
+        fontFamily: 'Poppins-SemiBold',
+
   },
   videoContainer: {
     justifyContent: 'center',
