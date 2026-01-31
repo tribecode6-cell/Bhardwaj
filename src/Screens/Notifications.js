@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -6,38 +6,53 @@ import {
   ScrollView,
   TouchableOpacity,
   StatusBar,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useNavigation } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
 
 const Notifications = () => {
   const navigation = useNavigation();
 
-  // 🔹 Mock data (replace with API later)
-  const notifications = [
-    {
-      id: 1,
-      title: 'Appointment Confirmed',
-      message: 'Your appointment with Dr. Sharma is confirmed.',
-      time: '10 mins ago',
-      read: false,
-    },
-    {
-      id: 2,
-      title: 'Appointment Rescheduled',
-      message: 'Your appointment has been rescheduled to 21 Jan.',
-      time: '2 hours ago',
-      read: true,
-    },
-    {
-      id: 3,
-      title: 'New Message',
-      message: 'Dr. Verma sent you a message.',
-      time: 'Yesterday',
-      read: true,
-    },
-  ];
+  const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getNotifications();
+  }, []);
+
+  const getNotifications = async () => {
+    try {
+      const token = await AsyncStorage.getItem('access_token');
+
+      if (!token) {
+        console.log('No access token found');
+        setNotifications([]);
+        return;
+      }
+
+      const response = await axios.get(
+        'https://argosmob.uk/bhardwaj-hospital/public/api/notifications',
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: 'application/json',
+          },
+        },
+      );
+console.log("Notifications",response?.data?.data);
+
+      setNotifications(response?.data?.data || []);
+    } catch (error) {
+      console.log('NOTIFICATION API ERROR', error?.response || error);
+      setNotifications([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -52,45 +67,49 @@ const Notifications = () => {
         <View style={{ width: 26 }} />
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {notifications.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Icon name="bell-off-outline" size={60} color="#ccc" />
-            <Text style={styles.emptyText}>No notifications yet</Text>
-          </View>
-        ) : (
-          notifications.map(item => (
-            <TouchableOpacity
-              key={item.id}
-              style={[
-                styles.notificationCard,
-                !item.read && styles.unreadCard,
-              ]}
-              activeOpacity={0.8}
-            >
-              <View style={styles.iconContainer}>
-                <Icon
-                  name={
-                    item.title.includes('Message')
-                      ? 'message-text'
-                      : 'calendar-check'
-                  }
-                  size={20}
-                  color="#fff"
-                />
-              </View>
+      {loading ? (
+        <ActivityIndicator size="large" color="#4f8cff" style={{ marginTop: 40 }} />
+      ) : (
+        <ScrollView showsVerticalScrollIndicator={false}>
+          {notifications.length === 0 ? (
+            <View style={styles.emptyState}>
+              <Icon name="bell-off-outline" size={60} color="#ccc" />
+              <Text style={styles.emptyText}>No notifications yet</Text>
+            </View>
+          ) : (
+            notifications.map(item => (
+              <TouchableOpacity
+                key={item.id}
+                style={[
+                  styles.notificationCard,
+                  !item.read && styles.unreadCard,
+                ]}
+                activeOpacity={0.8}
+              >
+                <View style={styles.iconContainer}>
+                  <Icon
+                    name={
+                      item.title?.includes('Message')
+                        ? 'message-text'
+                        : 'calendar-check'
+                    }
+                    size={20}
+                    color="#fff"
+                  />
+                </View>
 
-              <View style={styles.textContainer}>
-                <Text style={styles.title}>{item.title}</Text>
-                <Text style={styles.message}>{item.message}</Text>
-                <Text style={styles.time}>{item.time}</Text>
-              </View>
+                <View style={styles.textContainer}>
+                  <Text style={styles.title}>{item.title}</Text>
+                  <Text style={styles.message}>{item.message}</Text>
+                  <Text style={styles.time}>{item.time}</Text>
+                </View>
 
-              {!item.read && <View style={styles.dot} />}
-            </TouchableOpacity>
-          ))
-        )}
-      </ScrollView>
+                {!item.read && <View style={styles.dot} />}
+              </TouchableOpacity>
+            ))
+          )}
+        </ScrollView>
+      )}
     </SafeAreaView>
   );
 };
@@ -99,7 +118,7 @@ export default Notifications;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#ffffff',
   },
 
   /* ---------- HEADER ---------- */
@@ -109,17 +128,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-    backgroundColor: '#fff',
+    borderBottomColor: '#f0f0f0',
+    backgroundColor: '#ffffff',
   },
   headerTitle: {
     flex: 1,
     textAlign: 'center',
     fontSize: 18,
-    fontWeight: '600',
-    color: '#000',
-            fontFamily: 'Poppins-SemiBold',
-
+    color: '#111',
+    fontFamily: 'Poppins-SemiBold',
   },
 
   /* ---------- EMPTY STATE ---------- */
@@ -130,38 +147,41 @@ const styles = StyleSheet.create({
     marginTop: 120,
   },
   emptyText: {
-    marginTop: 12,
+    marginTop: 14,
     fontSize: 15,
-    color: '#999',
-                fontFamily: 'Poppins-Medium',
-
+    color: '#9ca3af',
+    fontFamily: 'Poppins-Medium',
   },
 
   /* ---------- NOTIFICATION CARD ---------- */
   notificationCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fafafa',
+    backgroundColor: '#ffffff',
     marginHorizontal: 16,
     marginTop: 12,
     padding: 14,
-    borderRadius: 12,
-    elevation: 2, // Android shadow
-    shadowColor: '#000', // iOS shadow
-    shadowOpacity: 0.05,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
+    borderRadius: 14,
+
+    /* Shadow */
+    shadowColor: '#000',
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 3,
   },
 
   unreadCard: {
-    backgroundColor: '#eef5ff',
+    backgroundColor: '#f2f7ff',
+    borderLeftWidth: 4,
+    borderLeftColor: '#4f8cff',
   },
 
   /* ---------- ICON ---------- */
   iconContainer: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     backgroundColor: '#4f8cff',
     alignItems: 'center',
     justifyContent: 'center',
@@ -174,32 +194,29 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 15,
-    fontWeight: '600',
-    color: '#222',
-                fontFamily: 'Poppins-Medium',
-
+    color: '#111827',
+    fontFamily: 'Poppins-Medium',
   },
   message: {
     fontSize: 13,
-    color: '#666',
-    marginTop: 2,
-        fontFamily: 'Poppins-Regular',
-
+    color: '#6b7280',
+    marginTop: 3,
+    lineHeight: 18,
+    fontFamily: 'Poppins-Regular',
   },
   time: {
     fontSize: 11,
-    color: '#999',
+    color: '#9ca3af',
     marginTop: 6,
-        fontFamily: 'Poppins-Regular',
-
+    fontFamily: 'Poppins-Regular',
   },
 
   /* ---------- UNREAD DOT ---------- */
   dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: 9,
+    height: 9,
+    borderRadius: 4.5,
     backgroundColor: '#4f8cff',
-    marginLeft: 8,
+    marginLeft: 10,
   },
 });

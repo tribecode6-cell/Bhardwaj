@@ -261,9 +261,11 @@ const AppointmentDetails = () => {
           </View>
         </View> */}
         <View style={styles.buttonRow}>
-          <TouchableOpacity
+          {/* <TouchableOpacity
             style={styles.rescheduleButton}
             onPress={() =>
+              console.log("kshdfkashk",appointment);
+              
               navigation.navigate('RescheduleAppointment', {
                 doctorId: appointment.doctor.id,
                 appointmentId: appointment.id,
@@ -276,7 +278,27 @@ const AppointmentDetails = () => {
                 notes: appointment.notes || '',
               })
             }
-          >
+          > */}
+          <TouchableOpacity
+  style={styles.rescheduleButton}
+  onPress={() => {
+
+    navigation.navigate('RescheduleAppointment', {
+      doctorId: appointment.doctor.id,
+      appointmentId: appointment.id,
+      appointmentDate: formatDateForCalendar(
+        appointment.appointment_date,
+      ),
+      appointmentStartTime: appointment.start_time,
+      appointmentEndTime: appointment.end_time,
+      resourceName: appointment.resource?.name || '',
+      notes: appointment.notes || '',
+        doctorImage: appointment.doctor?.profile_image || ''  , // ONLY image name/path
+
+    });
+  }}
+>
+
             <Text style={styles.rescheduleText}>Reschedule</Text>
           </TouchableOpacity>
 

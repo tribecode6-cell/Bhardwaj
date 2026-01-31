@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   Image,
   Linking,
-  ScrollView,
+  ScrollView,TextInput
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -18,6 +18,8 @@ const videos = [
 ];
 
 const Doctors = () => {
+  const [search, setSearch] = useState('');
+
   const openYoutube = (videoId) => {
     const url = `https://youtu.be/${videoId}`;
     Linking.openURL(url);
@@ -29,6 +31,21 @@ const Doctors = () => {
 
       <ScrollView contentContainerStyle={{ padding: 16 }}>
         <Text style={styles.headerTitle}>Explore</Text>
+
+        {/* SEARCH */}
+<View style={styles.searchBox}>
+  <Image
+    source={require('../assets/search.png')} // or use Icon if you want
+    style={{ width: 20, height: 20, tintColor: '#999' }}
+  />
+  <TextInput
+    placeholder="Search videos..."
+    style={styles.searchInput}
+    value={search}
+    onChangeText={setSearch}
+  />
+</View>
+
 
         {videos.map((item, index) => (
           <View key={item.id}>
@@ -92,4 +109,19 @@ const styles = StyleSheet.create({
     backgroundColor: '#ccc',
     marginVertical: 20,
   },
+  searchBox: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  backgroundColor: '#f1f4f6',
+  padding: 12,
+  borderRadius: 12,
+  marginBottom: 20,
+},
+searchInput: {
+  flex: 1,
+  marginLeft: 8,
+  fontFamily: 'Poppins-Regular',
+  color: '#000',
+},
+
 });

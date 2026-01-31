@@ -49,17 +49,17 @@ const Login = () => {
       );
 
       console.log('OTP API Response:', response.data);
-      if (response.data.status == 'true') {
-        Alert.alert('Success', `OTP sent to: ${email}`);
+      // if (response.data.status == 'true') {
+      //   Alert.alert('Success', `OTP sent to: ${email}`);
 
         navigation.navigate('Otp', {
           email: email,
         });
-      } else {
-        console.log("Error",response.data.message);
+      // } else {
+      //   console.log("Error",response.data.message);
         
-        setError(response.data.message || 'Something went wrong');
-      }
+      //   setError(response.data.message || 'Something went wrong');
+      // }
     } catch (err) {
       console.log('Error:', err);
       setError('Server error, try again later');

@@ -29,8 +29,8 @@ const Appointment = () => {
   const getActiveCall = async appointmentId => {
     try {
       const token = await AsyncStorage.getItem('access_token');
-      console.log("token",token);
-      
+      console.log('token', token);
+
       if (!token) {
         console.log('❌ No access token found');
         return null;
@@ -84,6 +84,7 @@ const Appointment = () => {
       const response = await axios.get(`${BASE_URL}/appointments`, {
         headers: { Authorization: `Bearer ${token}` },
       });
+      console.log('sendin id tt', response.data);
 
       if (response.data?.success) {
         const upcoming = [];
@@ -165,131 +166,126 @@ const Appointment = () => {
   /* ===================== HANDLE JOIN BUTTON PRESS ===================== */
   // Updated handleJoinPress with better debugging
 
-// const handleJoinPress = async (appointmentId) => {
-//   console.log('🎯 JOIN PRESSED');
-//   console.log('Appointment ID:', appointmentId);
+  // const handleJoinPress = async (appointmentId) => {
+  //   console.log('🎯 JOIN PRESSED');
+  //   console.log('Appointment ID:', appointmentId);
 
-//   try {
-//     const token = await AsyncStorage.getItem('access_token');
-//     if (!token) {
-//       Alert.alert('Error', 'Please login again');
-//       return;
-//     }
+  //   try {
+  //     const token = await AsyncStorage.getItem('access_token');
+  //     if (!token) {
+  //       Alert.alert('Error', 'Please login again');
+  //       return;
+  //     }
 
-//     const response = await axios.get(
-//       `${BASE_URL}/video-call/active-call`,
-//       {
-//         params: { appointment_id: appointmentId },
-//         headers: {
-//           Authorization: `Bearer ${token}`,
-//           Accept: 'application/json',
-//         },
-//       }
-//     );
+  //     const response = await axios.get(
+  //       `${BASE_URL}/video-call/active-call`,
+  //       {
+  //         params: { appointment_id: appointmentId },
+  //         headers: {
+  //           Authorization: `Bearer ${token}`,
+  //           Accept: 'application/json',
+  //         },
+  //       }
+  //     );
 
-//     console.log('✅ Active Call Response:', response.data);
-//     console.log('✅ Active Call id :', response?.data?.data?.call_id);
-// const callId = response?.data?.data?.call_id;
+  //     console.log('✅ Active Call Response:', response.data);
+  //     console.log('✅ Active Call id :', response?.data?.data?.call_id);
+  // const callId = response?.data?.data?.call_id;
 
-// {{baseURL}}/video-call/join
+  // {{baseURL}}/video-call/join
 
-// {
-//     "call_id" : 9
-// }
+  // {
+  //     "call_id" : 9
+  // }
 
-// this is how denfint the callId to this api
+  // this is how denfint the callId to this api
 
-//     // if (response.data?.success) {
-//     //   navigation.navigate('VideoCall', {
-//     //     appointmentId,
-//       // });
-//     // } else {
-//     //   Alert.alert(
-//     //     'Call Not Started',
-//     //     response.data?.message || 'Doctor has not started the call yet',
-//     //   );
-//     // }
+  //     // if (response.data?.success) {
+  //     //   navigation.navigate('VideoCall', {
+  //     //     appointmentId,
+  //       // });
+  //     // } else {
+  //     //   Alert.alert(
+  //     //     'Call Not Started',
+  //     //     response.data?.message || 'Doctor has not started the call yet',
+  //     //   );
+  //     // }
 
-//   } catch (error) {
-//     console.log('❌ ERROR:', error.response?.data || error.message);
+  //   } catch (error) {
+  //     console.log('❌ ERROR:', error.response?.data || error.message);
 
-//     Alert.alert(
-//       'Error',
-//       error.response?.data?.message || 'Something went wrong',
-//     );
-//   }
-// };
+  //     Alert.alert(
+  //       'Error',
+  //       error.response?.data?.message || 'Something went wrong',
+  //     );
+  //   }
+  // };
 
-const handleJoinPress = async (appointmentId) => {
-  console.log('🎯 JOIN PRESSED');
-  console.log('Appointment ID:', appointmentId);
+  const handleJoinPress = async appointmentId => {
+    console.log('🎯 JOIN PRESSED');
+    console.log('Appointment ID:', appointmentId);
 
-  try {
-    // Get token
-    const token = await AsyncStorage.getItem('access_token');
-    if (!token) {
-      Alert.alert('Error', 'Please login again');
-      return;
-    }
-      console.log("token",token);
-
-    // 1️⃣ Get active call for this appointment
-    const activeCallResponse = await axios.get(
-      `${BASE_URL}/video-call/active-call`,
-      {
-        params: { appointment_id: appointmentId },
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: 'application/json',
-        },
+    try {
+      // Get token
+      const token = await AsyncStorage.getItem('access_token');
+      if (!token) {
+        Alert.alert('Error', 'Please login again');
+        return;
       }
-    );
+      console.log('token', token);
 
-    console.log('✅ Active Call Response:', activeCallResponse.data);
-
-    // Extract call_id
-    const callId = activeCallResponse?.data?.data?.call_id;
-    if (!callId) {
-      Alert.alert(
-        'Call Not Started',
-        'Doctor has not started the call yet'
+      // 1️⃣ Get active call for this appointment
+      const activeCallResponse = await axios.get(
+        `${BASE_URL}/video-call/active-call`,
+        {
+          params: { appointment_id: appointmentId },
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: 'application/json',
+          },
+        },
       );
-      return;
-    }
 
-    console.log('✅ Call ID to join:', callId);
+      console.log('✅ Active Call Response:', activeCallResponse.data);
 
-    // 2️⃣ Join the call
-    const joinResponse = await axios.post(
-      `${BASE_URL}/video-call/join`,
-      { call_id: callId },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: 'application/json',
-        },
+      // Extract call_id
+      const callId = activeCallResponse?.data?.data?.call_id;
+      if (!callId) {
+        Alert.alert('Call Not Started', 'Doctor has not started the call yet');
+        return;
       }
-    );
 
-    console.log('✅ sending the call id  Join Response:', joinResponse.data);
+      console.log('✅ Call ID to join:', callId);
 
-    navigation.navigate('VideoCall', {
-      appointmentId,
-      // callId,
-      channelName: joinResponse?.data?.data?.channel_name,
-      agoraToken: joinResponse?.data?.data?.token,
-      uid: joinResponse?.data?.data?.uid,
-    });
+      // 2️⃣ Join the call
+      const joinResponse = await axios.post(
+        `${BASE_URL}/video-call/join`,
+        { call_id: callId },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: 'application/json',
+          },
+        },
+      );
 
-  } catch (error) {
-    console.log('❌ ERROR:', error.response?.data || error.message);
-    Alert.alert(
-      'Error',
-      error.response?.data?.message || 'Something went wrong'
-    );
-  }
-};
+      console.log('✅ sending the call id  Join Response:', joinResponse.data);
 
+      navigation.navigate('VideoCall', {
+        appointmentId,
+        // callId,
+        channelName: joinResponse?.data?.data?.channel_name,
+        agoraToken: joinResponse?.data?.data?.token,
+        uid: joinResponse?.data?.data?.uid,
+      });
+    } catch (error) {
+      console.log('❌ ERROR:', error.response?.data || error.message);
+      Alert.alert(
+        'Error',
+        error.response?.data?.message || 'Something went wrong',
+      );
+    }
+  };
 
   /* ===================== APPOINTMENT CARD ===================== */
   const renderAppointmentCard = (appointment, index) => {
@@ -334,25 +330,44 @@ const handleJoinPress = async (appointmentId) => {
           </View>
 
           {/* ===================== JOIN BUTTON ===================== */}
-          {appointment.status === 'scheduled' &&
-            appointment.type === 'video' && (
-              <TouchableOpacity
-                disabled={!joinEnabled}
-                style={[
-                  styles.joinButton,
-                  !joinEnabled && styles.joinButtonDisabled,
-                ]}
-                // onPress={() => handleJoinPress(appointment)}
-                onPress={() => {
-                  // console.log('Appointment item:', appointment.id);
-                  handleJoinPress(appointment.id);
-                }}
-              >
-                <Text style={styles.joinText}>
-                  {joinEnabled ? 'Join' : 'Not Started'}
-                </Text>
-              </TouchableOpacity>
-            )}
+          <View>
+            {appointment.status === 'scheduled' &&
+              appointment.type === 'video' && (
+                <TouchableOpacity
+                  disabled={!joinEnabled}
+                  style={[
+                    styles.joinButton,
+                    !joinEnabled && styles.joinButtonDisabled,
+                  ]}
+                  // onPress={() => handleJoinPress(appointment)}
+                  onPress={() => {
+                    // console.log('Appointment item:', appointment.id);
+                    handleJoinPress(appointment.id);
+                  }}
+                >
+                  <Text style={styles.joinText}>
+                    {joinEnabled ? 'Join' : 'Not Started'}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            <TouchableOpacity
+  onPress={() => {
+    console.log('Prescription appointment ID:', appointment.id);
+    navigation.navigate('ReportsScreen', { appointmentId: appointment.id });
+  }}              style={[
+                styles.joinButton,
+                {
+                  marginTop:
+                    appointment.status === 'scheduled' &&
+                    appointment.type === 'video'
+                      ? 10
+                      : 0,
+                },
+              ]}
+            >
+              <Text style={styles.joinText}>Prescription</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </TouchableOpacity>
     );
@@ -368,7 +383,7 @@ const handleJoinPress = async (appointmentId) => {
         {/* <TouchableOpacity onPress={() => navigation.goBack()}>
           <Icon name="arrow-left" size={26} />
         </TouchableOpacity> */}
-        <View/>
+        <View />
         <Text style={styles.headerTitle}>Appointments</Text>
         <TouchableOpacity onPress={getAppointment}>
           <Icon name="refresh" size={26} />

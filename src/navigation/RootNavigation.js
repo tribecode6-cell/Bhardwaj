@@ -35,6 +35,9 @@ import UpdateProfile from'../Screens/UpdateProfile';
 import TabNavigation from '../navigation/TabNavigation';
 import Doctor from "../Screens/Doctor"
 import VideoCall from "../Component/VideoCall"
+import Specialty from '../Screens/Specialty';
+import PDFViewer from '../Component/PDFViewer';
+
 const Stack = createNativeStackNavigator();
 
  const RootNavigation =()=> {
@@ -82,6 +85,20 @@ const Stack = createNativeStackNavigator();
           component={Doctor}
           options={{ headerShown: false }}
         />
+
+    <Stack.Screen
+          name="PDFViewer"
+          component={PDFViewer}
+          options={{ headerShown: false }}
+        />
+
+        
+      <Stack.Screen
+          name="Specialty"
+          component={Specialty}
+          options={{ headerShown: false }}
+        />
+        
         <Stack.Screen
           name="BookAppointment"
           component={BookAppointment}

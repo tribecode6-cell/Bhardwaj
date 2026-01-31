@@ -25,9 +25,9 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState({});
   const [favourites, setFavourites] = useState([]);
-  const [imageKey, setImageKey] = useState(Date.now()); // ✅ Force image refresh
+  const [imageKey, setImageKey] = useState(Date.now());
   const FAV_KEY = 'FAV_DOCTORS';
-const [banner, setBanner] = useState(null);
+  const [banner, setBanner] = useState(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -101,7 +101,9 @@ const [banner, setBanner] = useState(null);
       const response = await axios.get(
         'https://argosmob.uk/bhardwaj-hospital/public/api/doctors/get-doctor',
       );
-      setDoctors(response?.data?.data);
+      // setDoctors(response?.data?.data);
+      setDoctors(response?.data?.data || []);
+
       console.log('DOCTOR DATA', response?.data?.data);
     } catch (error) {
       console.log('API ERROR', error);
@@ -110,19 +112,18 @@ const [banner, setBanner] = useState(null);
     }
   };
 
-  
-    const getBanner = async () => {
+  const getBanner = async () => {
     try {
       const response = await axios.get(
         'https://argosmob.uk/bhardwaj-hospital/public/api/banners',
       );
       console.log('Bannner DATA', response?.data?.data);
-          console.log('Bannner image', response?.data?.data[0]?.image);
-          const bannerData = response?.data?.data[0]?.image;
-setBanner(bannerData); 
-    //   if (bannerData && bannerData.length > 0) {
-    //   setBanner(bannerData[0]); 
-    // }
+      console.log('Bannner image', response?.data?.data[0]?.image);
+      const bannerData = response?.data?.data[0]?.image;
+      setBanner(bannerData);
+      //   if (bannerData && bannerData.length > 0) {
+      //   setBanner(bannerData[0]);
+      // }
     } catch (error) {
       console.log('API ERROR Banner', error);
     } finally {
@@ -154,176 +155,215 @@ setBanner(bannerData);
     getuserinfo();
     getToken();
     loadFavourites();
-    getBanner()
+    getBanner();
   }, []);
 
   // ✅ REFRESH USER DATA WHEN SCREEN COMES INTO FOCUS
   useFocusEffect(
     useCallback(() => {
       console.log('🔄 Screen focused - refreshing user data');
-      setImageKey(Date.now()); 
-      getuserinfo(); 
+      setImageKey(Date.now());
+      getuserinfo();
       loadFavourites();
     }, []),
   );
+const actionButtons = [
+  {
+    id: '1',
+    title: 'Events',
+    onPress: () => navigation.navigate('Evants'),
+  },
+ {
+    id: '2',
+    title: 'Order Medicine',
+    onPress: () =>
+      Linking.openURL('https://whatsform.com/D926-T'),
+  },
+  {
+    id: '3',
+    title: 'Speciality',
+    onPress: () => navigation.navigate('Specialty'),
+  },
+  {
+    id: '4',
+    title: 'Reports',
+    onPress: () => navigation.navigate('ReportsScreen'),
+  },
+];
+
 
   return (
     <>
+      <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+        <StatusBar
+          barStyle="dark-content"
+          backgroundColor="#fff"
+          translucent={false}
+        />
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingHorizontal: 16 }}
+        >
+          {/* Header */}
+          <View style={styles.header}>
+            <View>
+              <Text style={styles.greeting}>Hello</Text>
+              <Text style={styles.username}>{user.name}</Text>
+            </View>
 
-<SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
-    <StatusBar
-  barStyle="dark-content"
-  backgroundColor="#fff"
-  translucent={false}
-/>
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingHorizontal: 16 }}
-      >
-        {/* Header */}
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.greeting}>Hello</Text>
-            <Text style={styles.username}>{user.name}</Text>
+            <View style={styles.headerRight}>
+              <TouchableOpacity
+                style={styles.bellIcon}
+                onPress={() => navigation.navigate('Notifications')}
+              >
+                <Icon name="bell-outline" size={24} color="#E66A2C" />
+              </TouchableOpacity>
+
+              <Image
+                source={
+                  user?.profile_picture
+                    ? {
+                        uri: `https://argosmob.uk/bhardwaj-hospital/storage/app/public/profiles/${user.profile_picture}`,
+                      }
+                    : require('../assets/Images/Splash.png')
+                }
+                style={styles.profileImage}
+              />
+            </View>
           </View>
 
-          <View style={styles.headerRight}>
-            <TouchableOpacity
-              style={styles.bellIcon}
-              onPress={() => navigation.navigate('Notifications')}
-            >
-              <Icon name="bell-outline" size={24} color="#E66A2C" />
-            </TouchableOpacity>
-
-            <Image
-              source={
-                user?.profile_picture
-                  ? {
-                      uri: `https://argosmob.uk/bhardwaj-hospital/storage/app/public/profiles/${user.profile_picture}`,
-                    }    
-                  : require('../assets/Images/Splash.png')
-              }
-              style={styles.profileImage}
-            />
-            
-
-            
-          </View>
-        </View>
-
-        {/* Hospital Image */}
-        {/* <Image
+          {/* Hospital Image */}
+          {/* <Image
           source={require('../assets/Images/Hospital.png')}
           style={styles.hospitalImage}
         /> */}
-<Image
-  source={
-    banner
-      ? {
-          uri: `https://argosmob.uk/bhardwaj-hospital/storage/app/public/banners/${banner}`,
-        }
-      : require('../assets/Images/Hospital.png')
-  }
-  style={styles.hospitalImage}
-  resizeMode="cover"
+          <Image
+            source={
+              banner
+                ? {
+                    uri: `https://argosmob.uk/bhardwaj-hospital/storage/app/public/banners/${banner}`,
+                  }
+                : require('../assets/Images/Hospital.png')
+            }
+            style={styles.hospitalImage}
+            resizeMode="cover"
+          />
+
+          {/* Quick Action Buttons */}
+          <View style={styles.actionRow}>
+   
+
+            {/* <TouchableOpacity
+              onPress={() => navigation.navigate('Evants')}
+              style={styles.actionButton}
+            >
+              <Text style={styles.actionText}>Events</Text>
+            </TouchableOpacity>
+
+
+     <TouchableOpacity
+              onPress={() => navigation.navigate('Emergency')}
+              style={styles.actionButton}
+            >
+              <Text style={styles.actionText}>Order Medicine</Text>
+            </TouchableOpacity>
+                 <TouchableOpacity
+              onPress={() => navigation.navigate('Emergency')}
+              style={styles.actionButton}
+            >
+              <Text style={styles.actionText}>Specialty</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => navigation.navigate('ReportsScreen')}
+              style={styles.actionButton}
+            >
+              <Text style={styles.actionText}>Reports</Text>
+            </TouchableOpacity> */}
+
+            <FlatList
+  data={actionButtons}
+  horizontal
+  showsHorizontalScrollIndicator={false}
+  keyExtractor={item => item.id}
+  contentContainerStyle={{ marginTop: 15 }}
+  renderItem={({ item }) => (
+    <TouchableOpacity
+      onPress={item.onPress}
+      style={styles.actionButton}
+    >
+      <Text style={styles.actionText}>{item.title}</Text>
+    </TouchableOpacity>
+  )}
 />
 
+          </View>
 
-        {/* Quick Action Buttons */}
-        <View style={styles.actionRow}>
-          {/* <TouchableOpacity
-            onPress={() => navigation.navigate('Services')}
-            style={styles.actionButton}
-          >
-            <Text style={styles.actionText}>Services</Text>
-          </TouchableOpacity> */}
+          {/* Top Doctors */}
+          <View style={styles.topDoctorsHeader}>
+            <Text style={styles.topDoctorsText}>Top Doctors</Text>
+          </View>
 
-          <TouchableOpacity
-            onPress={() => navigation.navigate('Evants')}
-            style={styles.actionButton}
-          >
-            <Text style={styles.actionText}>Events</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={() => navigation.navigate('Emergency')}
-            style={styles.actionButton}
-          >
-            <Text style={styles.actionText}>Emergency</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={() => navigation.navigate('ReportsScreen')}
-            style={styles.actionButton}
-          >
-            <Text style={styles.actionText}>Reports</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Top Doctors */}
-        <View style={styles.topDoctorsHeader}>
-          <Text style={styles.topDoctorsText}>Top Doctors</Text>
-        </View>
-
-        {loading ? (
-          <Text style={{ textAlign: 'center', marginTop: 30 }}>Loading...</Text>
-        ) : (
-          <FlatList
-            data={doctor.data}
-            keyExtractor={item => item.id.toString()}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                onPress={() =>
-                  navigation.navigate('DoctorDetails', { doctorId: item.id })
-                }
-              >
-                <View style={styles.doctorCard}>
-                  <Image
-                    source={
-                      item.profile_image
-                        ? {
-                            uri: `https://argosmob.uk/bhardwaj-hospital/storage/app/public/${item.profile_image}`,
-                          }
-                        : require('../assets/Images/Doctor.png')
-                    }
-                    style={styles.doctorImage}
-                  />
-
-                  <View style={styles.doctorInfo}>
-                    <Text style={styles.doctorName}>
-                      {`${item.first_name} ${item.last_name}`}
-                    </Text>
-                    <Text style={styles.specialization}>
-                      {item.specialty?.name}
-                    </Text>
-                    <Text style={styles.price}>{item.consultation_fee}</Text>
-                    <Text style={styles.rating}>
-                      {item.qualifications.length >= 20
-                        ? item.qualifications.slice(0, 20) + '...'
-                        : item.qualifications}
-                    </Text>
-                  </View>
-
-                  <TouchableOpacity onPress={() => toggleFavourite(item.id)}>
-                    <Icon
-                      name={
-                        favourites.includes(Number(item.id))
-                          ? 'heart'
-                          : 'heart-outline'
+          {loading ? (
+            <Text style={{ textAlign: 'center', marginTop: 30 }}>
+              Loading...
+            </Text>
+          ) : (
+            <FlatList
+              data={doctor.data}
+              keyExtractor={item => item.id.toString()}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  onPress={() =>
+                    navigation.navigate('DoctorDetails', { doctorId: item.id })
+                  }
+                >
+                  <View style={styles.doctorCard}>
+                    <Image
+                      source={
+                        item.profile_image
+                          ? {
+                              uri: `https://argosmob.uk/bhardwaj-hospital/storage/app/public/${item.profile_image}`,
+                            }
+                          : require('../assets/Images/Doctor.png')
                       }
-                      size={24}
-                      color={
-                        favourites.includes(Number(item.id)) ? 'red' : '#999'
-                      }
+                      style={styles.doctorImage}
                     />
-                  </TouchableOpacity>
-                </View>
-              </TouchableOpacity>
-            )}
-          />
-        )}
-      </ScrollView>
-    </SafeAreaView>
+
+                    <View style={styles.doctorInfo}>
+                      <Text style={styles.doctorName}>
+                        {`${item.first_name} ${item.last_name}`}
+                      </Text>
+                      <Text style={styles.specialization}>
+                        {item.specialty?.name}
+                      </Text>
+                      <Text style={styles.price}>{item.consultation_fee}</Text>
+                      <Text style={styles.rating}>
+                        {item.qualifications.length >= 20
+                          ? item.qualifications.slice(0, 20) + '...'
+                          : item.qualifications}
+                      </Text>
+                    </View>
+
+                    <TouchableOpacity onPress={() => toggleFavourite(item.id)}>
+                      <Icon
+                        name={
+                          favourites.includes(Number(item.id))
+                            ? 'heart'
+                            : 'heart-outline'
+                        }
+                        size={24}
+                        color={
+                          favourites.includes(Number(item.id)) ? 'red' : '#999'
+                        }
+                      />
+                    </TouchableOpacity>
+                  </View>
+                </TouchableOpacity>
+              )}
+            />
+          )}
+        </ScrollView>
+      </SafeAreaView>
     </>
   );
 };
@@ -398,6 +438,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     marginHorizontal: 4,
     alignItems: 'center',
+    paddingHorizontal:10
   },
   actionText: {
     color: '#fff',
@@ -412,7 +453,7 @@ const styles = StyleSheet.create({
   },
   topDoctorsText: {
     fontSize: 18,
-        fontFamily: 'Poppins-Medium',
+    fontFamily: 'Poppins-Medium',
     color: '#000',
   },
   doctorCard: {
@@ -436,25 +477,22 @@ const styles = StyleSheet.create({
   },
   doctorName: {
     fontSize: 16,
-        fontFamily: 'Poppins-SemiBold',
+    fontFamily: 'Poppins-SemiBold',
   },
   specialization: {
     color: '#777',
     fontSize: 14,
-            fontFamily: 'Poppins-Medium',
-
+    fontFamily: 'Poppins-Medium',
   },
   price: {
     fontWeight: '600',
     marginTop: 3,
     color: '#000',
-        fontFamily: 'Poppins-Regular',
-
+    fontFamily: 'Poppins-Regular',
   },
   rating: {
     color: '#ff8800',
     fontSize: 13,
-        fontFamily: 'Poppins-Regular',
-
+    fontFamily: 'Poppins-Regular',
   },
 });
