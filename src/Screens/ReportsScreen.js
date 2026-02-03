@@ -39,24 +39,55 @@ const PrescriptionItem = ({ item, onPress }) => {
       <View style={[styles.iconBox, { backgroundColor: '#4CAF50' }]}>
         <Icon name="pill" size={24} color="#fff" />
       </View>
-      <View style={{ flex: 1 }}>
-        <Text style={styles.reportTitle}>{item.title || 'Prescription'}</Text>
+
+      <View style={{ flex: 1, marginRight: 8 }}>
+        <Text style={styles.reportTitle}>Prescription #{item.id}</Text>
         <Text style={styles.reportSubtitle}>
-          {item.date || 'Date not available'}
+          Date: {item.prescription_date?.split('T')[0]}
         </Text>
         <Text style={styles.patientName}>
-          Doctor: {item.doctor || 'N/A'}
+          Doctor: {item.doctor?.name || 'N/A'}
         </Text>
+
+        {/* Medicines */}
+        {item.medicines?.map((med, index) => (
+          <View key={index} style={{ marginTop: 6 }}>
+            <Text style={styles.medicineText}>
+              {med.medicine} - {med.dosage} - {med.frequency} ({med.duration})
+            </Text>
+          </View>
+        ))}
+
+        {/* Instructions */}
+        {item.instructions && (
+          <Text style={[styles.medicineText, { marginTop: 4 }]}>
+            Instructions: {item.instructions}
+          </Text>
+        )}
+
+        {item.follow_up_advice && (
+          <Text style={[styles.medicineText, { marginTop: 2 }]}>
+            Follow-up: {item.follow_up_advice}
+          </Text>
+        )}
       </View>
+
       <Icon name="chevron-right" size={20} color="#999" />
     </TouchableOpacity>
   );
 };
 
-const ReportsScreen = ({ navigation,route }) => {
-    const { appointmentId } = route.params;
 
-  const [activeTab, setActiveTab] = useState('reports'); // 'reports' or 'prescriptions'
+
+
+const ReportsScreen = ({ navigation,route }) => {
+const { appointmentId } = route.params || {};
+console.log("Appintmet Id",appointmentId);
+
+  // const [activeTab, setActiveTab] = useState('reports'); // 'reports' or 'prescriptions'
+  const [activeTab, setActiveTab] = useState(
+  appointmentId ? 'prescriptions' : 'reports'
+);
   const [reports, setReports] = useState([]);
   const [prescriptions, setPrescriptions] = useState([]);
   const [search, setSearch] = useState('');
@@ -77,7 +108,7 @@ const ReportsScreen = ({ navigation,route }) => {
       );
 console.log("prection",response.data);
 
-      setPrescriptions(response.data?.data || []);
+setPrescriptions(response.data?.prescriptions || []);
     } catch (error) {
       console.log(
         'PRESCRIPTION API ERROR:',
@@ -90,6 +121,7 @@ console.log("prection",response.data);
   useEffect(() => {
     getPrescriptions();
   }, []);
+
   // 🔹 API CALL - Medical Reports
   const getMedicalReports = async () => {
     try {
@@ -242,11 +274,16 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
   },
+
+  /* HEADER */
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 12,
+    backgroundColor: '#fff',
+    borderBottomWidth: 0.5,
+    borderColor: '#eee',
   },
   headerTitle: {
     flex: 1,
@@ -255,8 +292,10 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginRight: 24,
     fontFamily: 'Poppins-Medium',
+    color: '#111',
   },
-  // 🔹 TAB STYLES
+
+  /* TABS */
   tabContainer: {
     flexDirection: 'row',
     marginHorizontal: 20,
@@ -285,9 +324,11 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins-Medium',
   },
   activeTabText: {
-    color: '#000',
+    color: '#111',
     fontWeight: '600',
   },
+
+  /* SEARCH */
   searchBox: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -297,9 +338,11 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     marginTop: 10,
   },
+
+  /* REPORT & PRESCRIPTION ROW */
   reportRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     paddingVertical: 14,
     borderBottomWidth: 0.5,
     borderColor: '#eee',
@@ -317,6 +360,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     fontFamily: 'Poppins-Medium',
+    color: '#111',
   },
   reportSubtitle: {
     fontSize: 13,
@@ -330,6 +374,16 @@ const styles = StyleSheet.create({
     marginTop: 2,
     fontFamily: 'Poppins-Regular',
   },
+
+  /* MEDICINES & INSTRUCTIONS */
+  medicineText: {
+    fontSize: 13,
+    color: '#555',
+    fontFamily: 'Poppins-Regular',
+    marginTop: 2,
+  },
+
+  /* EMPTY STATES */
   emptyContainer: {
     alignItems: 'center',
     marginTop: 60,
